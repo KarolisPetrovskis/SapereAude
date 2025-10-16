@@ -1,0 +1,1318 @@
+openapi: 3.0.4
+info:
+  title: Commerce Backend API (diagram-derived, updated)
+  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation/ProductPrice, Orders, Reservations, Discounts, TaxRates, Businesses and Workers.
+  version: 1.0.1
+servers:
+  - url: https://api.example.com/v1
+tags:
+  - name: Product
+    description: Product, ProductPrice, ProductVariation, ProductGroup operations
+  - name: Order
+    description: Orders, order items and payments
+  - name: Customer
+    description: Customer operations
+  - name: Business
+    description: Business and Worker operations
+  - name: Reservation
+    description: Reservation operations
+  - name: Discount
+    description: Discount operations
+  - name: Tax
+    description: Tax rate operations
+
+paths:
+  /products:
+    get:
+      tags: [Product]
+      summary: List products
+      parameters:
+        - name: businessId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: productGroupId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Product]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation error
+
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Product]
+      summary: Get product by id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+
+    put:
+      tags: [Product]
+      summary: Update existing product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+
+    delete:
+      tags: [Product]
+      summary: Delete product
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Product not found
+
+  /products/{productId}/prices:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Product]
+      summary: List all product prices (for product & variations)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductPrice'
+        '404':
+          description: Product not found
+    post:
+      tags: [Product]
+      summary: Create a product price (relationship to ProductVariation optional)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductPriceCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPrice'
+        '400':
+          description: Invalid input
+        '404':
+          description: Product not found
+
+  /productGroups:
+    get:
+      tags: [Product]
+      summary: List product groups
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductGroup'
+    post:
+      tags: [Product]
+      summary: Create product group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductGroupCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductGroup'
+
+  /productVariations:
+    get:
+      tags: [Product]
+      summary: List product variations
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: productGroupId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductVariation'
+    post:
+      tags: [Product]
+      summary: Create product variation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVariationCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariation'
+
+  /productVariations/{variationId}:
+    parameters:
+      - name: variationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Product]
+      summary: Get product variation by id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariation'
+        '404':
+          description: Not found
+    put:
+      tags: [Product]
+      summary: Update product variation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVariationCreate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariation'
+
+  /orders:
+    get:
+      tags: [Order]
+      summary: List orders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: businessId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: workerId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+    post:
+      tags: [Order]
+      summary: Create order (with inline items allowed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid input
+
+  /orders/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Order]
+      summary: Get order by ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not found
+    put:
+      tags: [Order]
+      summary: Update an existing order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderUpdate'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+    delete:
+      tags: [Order]
+      summary: Delete order
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+  /orders/{orderId}/items:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Order]
+      summary: List items for an order
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderItem'
+    post:
+      tags: [Order]
+      summary: Add an OrderItem to an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderItemCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItem'
+        '400':
+          description: Invalid input
+        '404':
+          description: Order or Product not found
+
+  /order-payments:
+    post:
+      tags: [Order]
+      summary: Create a payment for an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderPaymentCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPayment'
+        '400':
+          description: Invalid input
+
+  /customers:
+    get:
+      tags: [Customer]
+      summary: List customers
+      parameters:
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: phoneNumber
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+    post:
+      tags: [Customer]
+      summary: Create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+  /businesses:
+    get:
+      tags: [Business]
+      summary: List businesses
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Business'
+    post:
+      tags: [Business]
+      summary: Create business
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+
+  /businesses/{businessId}/workers:
+    parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Business]
+      summary: List workers for a business
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
+    post:
+      tags: [Business]
+      summary: Create a worker under a business
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+
+  /reservations:
+    get:
+      tags: [Reservation]
+      summary: List reservations
+      parameters:
+        - name: customerId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: businessId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+    post:
+      tags: [Reservation]
+      summary: Create reservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+
+  /discounts:
+    get:
+      tags: [Discount]
+      summary: List discounts
+      parameters:
+        - name: businessId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: productId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Discount'
+    post:
+      tags: [Discount]
+      summary: Create discount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscountCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Discount'
+
+  /taxRates:
+    get:
+      tags: [Tax]
+      summary: List tax rates
+      parameters:
+        - name: productGroupId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: businessId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRate'
+    post:
+      tags: [Tax]
+      summary: Create tax rate (business-scoped)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaxRateCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+
+components:
+  responses:
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # Product & related
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        productPriceId:
+          type: string
+          format: uuid
+        maxServiceDuration:
+          type: number
+          format: float
+        productGroupId:
+          type: string
+          format: uuid
+      required: [id, businessId, name]
+
+    ProductCreate:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        productGroupId:
+          type: string
+          format: uuid
+        maxServiceDuration:
+          type: number
+      required: [businessId, productGroupId, name]
+
+    ProductUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        productPriceId:
+          type: string
+          format: uuid
+        maxServiceDuration:
+          type: number
+        productGroupId:
+          type: string
+          format: uuid
+
+    ProductPrice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        effectiveFrom:
+          type: string
+          format: date-time
+          description: epoch
+        effectiveTo:
+          type: string
+          format: date-time
+          nullable: true
+          description: epoch or null
+        basePrice:
+          type: number
+          format: decimal
+      required: [id, productId, basePrice, effectiveFrom]
+
+    ProductPriceCreate:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          description: The ID of the product this price applies to
+        effectiveFrom:
+          type: string
+          format: date-time
+          description: epoch
+        effectiveTo:
+          type: string
+          format: date-time
+          nullable: true
+          description: epoch
+        basePrice:
+          type: number
+          format: decimal
+      required: [productId, basePrice, effectiveFrom]
+
+    ProductGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    ProductGroupCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+      required: [name]
+
+    ProductVariation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+          description: Link to Product
+        group:
+          type: string
+        productGroupId:
+          type: string
+          format: uuid
+        option:
+          type: string
+        priceModifier:
+          type: number
+          format: decimal
+      required: [id, productId, group, productGroupId, priceModifier, option]
+
+    ProductVariationCreate:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productGroupId:
+          type: string
+          format: uuid
+        group:
+          type: string
+        option:
+          type: string
+        priceModifier:
+          type: number
+      required: [productId, productGroupId, group, priceModifier, option]
+
+    # Orders & items & payments
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+          description: epoch
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        specialRequest:
+          type: string
+          nullable: true
+        discountIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        orderItemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required: [id, workerId, businessId, dateTime, status, orderItemIds]
+
+    OrderCreate:
+      type: object
+      properties:
+        workerId:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+          description: epoch
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        specialRequest:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemCreate'
+      required: [workerId, businessId, dateTime, items]
+
+    OrderUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        specialRequest:
+          type: string
+        workerId:
+          type: string
+          format: uuid
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+          description: Link to Order (diagram relationship)
+        productId:
+          type: string
+          format: uuid
+        discountId:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: integer
+        isAltered:
+          type: array
+          items:
+            type: boolean
+        productVariationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+      required: [id, orderId, productId, amount, isAltered]
+
+    OrderItemCreate:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+        discountId:
+          type: string
+          format: uuid
+          nullable: true
+        isAltered:
+          type: array
+          items:
+            type: boolean
+        productVariationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required: [productId, amount, isAltered]
+
+    OrderPayment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        amount:
+          type: number
+          format: decimal
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        dateTime:
+          type: string
+          format: date-time
+          description: epoch
+        tip:
+          type: number
+          format: decimal
+      required: [id, orderId, amount, paymentType, dateTime, tip, products]
+
+    OrderPaymentCreate:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        amount:
+          type: number
+          format: decimal
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        tip:
+          type: number
+          format: decimal
+      required: [orderId, amount, paymentType, products]
+
+    # Customers, Businesses, Workers
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        middleName:
+          type: string
+          nullable: true
+        surname:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+      required: [id, name, surname]
+
+    CustomerCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        middleName:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+      required: [name]
+
+    Business:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        country:
+          type: string
+        address:
+          type: string
+        owner:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+      required: [id, name, country, address, owner, email, phoneNumber]
+
+    BusinessCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+        address:
+          type: string
+        owner:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+      required: [name, country, address, owner, email, phoneNumber]
+
+    Worker:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        surname:
+          type: string
+        permissionLevel:
+          type: array
+          items:
+            type: integer
+        businessId:
+          type: string
+          format: uuid
+        salary:
+          type: number
+          nullable: true
+      required: [id, name, surname, permissionLevel, businessId]
+
+    WorkerCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        permissionLevel:
+          type: array
+          items:
+            type: integer
+        salary:
+          type: number
+      required: [name, surname, permissionLevel]
+
+    # Reservations
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+          description: Link to Customer
+        businessId:
+          type: string
+          format: uuid
+          description: Link to Business
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          description: epoch
+        endTime:
+          type: string
+          format: date-time
+          description: epoch
+        WorkerId:
+          type: string
+          format: uuid
+          nullable: true
+        request:
+          type: string
+          nullable: true
+      required: [id, customerId, businessId, startTime, endTime]
+
+    ReservationCreate:
+      type: object
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        startTime:
+          type: integer
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+        customerWorkerId:
+          type: string
+          format: uuid
+        request:
+          type: string
+      required: [customerId, businessId, startTime, endTime]
+
+    # Discounts
+    Discount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+          nullable: true
+        startDate:
+          type: string
+          format: date-time
+          description: epoch
+        endDate:
+          type: string
+          format: date-time
+          description: epoch
+          nullable: true
+        percentDiscount:
+          type: boolean
+        amount:
+          type: number
+          format: decimal
+        individualItemDiscount:
+          type: boolean
+      required:
+        [
+          id,
+          businessId,
+          amount,
+          percentDiscount,
+          individualItemDiscount,
+          startDate,
+        ]
+
+    DiscountCreate:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date-time
+          description: epoch
+        endDate:
+          type: string
+          format: date-time
+          description: epoch
+        percentDiscount:
+          type: boolean
+        amount:
+          type: number
+          format: decimal
+        individualItemDiscount:
+          type: boolean
+      required: [businessId, amount, individualItemDiscount, percentDiscount]
+
+    # Tax rates
+    TaxRate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productGroupId:
+          type: string
+          format: uuid
+        value:
+          type: number
+          format: decimal
+        effectiveFrom:
+          type: string
+          format: date-time
+          description: epoch
+        effectiveTo:
+          type: string
+          format: date-time
+          description: epoch
+          nullable: true
+        country:
+          type: string
+        region:
+          type: string
+          nullable: true
+      required: [id, productGroupId, value, effectiveFrom, country]
+
+    TaxRateCreate:
+      type: object
+      properties:
+        productGroupId:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        value:
+          type: number
+          format: decimal
+        effectiveFrom:
+          type: string
+          format: date-time
+          description: epoch
+        effectiveTo:
+          type: string
+          format: date-time
+          description: epoch
+        country:
+          type: string
+        region:
+          type: string
+      required: [productGroupId, businessId, value, effectiveFrom, country]
+
+    # Enums & common
+    PaymentType:
+      type: string
+      enum: [Cash, Card, GiftCard]
+    OrderStatus:
+      type: string
+      enum: [InProgress, Canceled, Paid, Refunded]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required: [code, message]
