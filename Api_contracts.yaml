@@ -1097,7 +1097,12 @@ components:
         salary:
           type: number
           nullable: true
-      required: [id, name, surname, permissionLevel, businessId]
+        password:
+          type: string
+          description: hashed string
+        permissionLevel:
+          type: int64
+      required: [id, name, surname, permissionLevel, businessId, permissionLevel, password]
 
     WorkerCreate:
       type: object
