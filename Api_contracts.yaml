@@ -663,6 +663,244 @@ paths:
               schema:
                 $ref: '#/components/schemas/TaxRate'
 
+  /orders/info/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Order]
+      summary: Get full order details by ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderFullDetail'
+        '404':
+          description: Order not found
+
+  /reservations/all:
+    get:
+      tags: [Reservation]
+      summary: List all reservations for a business
+      parameters:
+        - name: businessId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the business to retrieve reservations for
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional filter to show only reservations by a specific customer
+      responses:
+        '200':
+          description: List of reservations for the given business
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservationDetail'
+        '404':
+          description: No reservations found for the specified business
+
+  /reservations/by-period:
+    get:
+      tags: [Reservation]
+      summary: Get reservations for a business within a specified time period
+      parameters:
+        - name: businessId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Business ID to retrieve reservations for
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Start date-time (inclusive)
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: End date-time (inclusive)
+      responses:
+        '200':
+          description: List of reservations within the given period
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+        '400':
+          description: Invalid or missing date range
+        '404':
+          description: No reservations found for the given business and period
+
+  /products/{productId}/price-history:
+    get:
+      tags: [ProductPrice]
+      summary: Get all price changes for a product
+      description: |
+        Returns the full price history for a product, including all effective date ranges.
+        Useful for displaying historical pricing trends or auditing.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the product to retrieve price changes for
+      responses:
+        '200':
+          description: List of all product price records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductPrice'
+        '404':
+          description: Product not found or no price history available
+
+  /businesses/{businessId}/workers/{workerId}/salary:
+    put:
+      tags: [Worker]
+      summary: Update worker salary
+      description: >
+        Updates the salary of a specific worker under the given business.
+        Only authorized users (e.g., business managers) should be able to perform this operation.
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the business the worker belongs to
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the worker whose salary will be updated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newSalary:
+                  type: number
+                  format: decimal
+                  description: New salary amount
+              required: [newSalary]
+      responses:
+        '200':
+          description: Salary updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+        '400':
+          description: Invalid salary input
+        '404':
+          description: Business or worker not found
+
+  /products/{productId}/tax:
+    get:
+      tags: [TaxRate]
+      summary: Get tax rate for a specific product
+      description: |
+        Returns the applicable tax rate for a product. 
+        The tax rate may be determined by the product's assigned tax type, 
+        product group, or business tax configuration.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The ID of the product to retrieve tax information for
+      responses:
+        '200':
+          description: Tax rate found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+        '404':
+          description: Product or tax rate not found
+
+  /workers/{workerId}/orders:
+    get:
+      tags: [Order]
+      summary: Get all orders created or handled by a specific worker
+      description: |
+        Retrieves a list of all orders associated with a given worker.
+        Useful for tracking worker performance, activity, or daily workload.
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the worker whose orders to retrieve
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+          description: Filter by order status (e.g., Pending, Completed)
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional start date to filter orders
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional end date to filter orders
+      responses:
+        '200':
+          description: List of orders handled by the worker
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '404':
+          description: Worker not found or no orders available
+
 components:
   responses:
     InternalError:
@@ -1097,12 +1335,9 @@ components:
         salary:
           type: number
           nullable: true
-        password:
-          type: string
-          description: hashed string
-        permissionLevel:
-          type: int64
-      required: [id, name, surname, permissionLevel, businessId, permissionLevel, password]
+        WorkerStatus:
+          $ref: '#/components/schemas/WorkerStatus'
+      required: [id, name, surname, permissionLevel, businessId, WorkerStatus]
 
     WorkerCreate:
       type: object
@@ -1305,6 +1540,82 @@ components:
           type: string
       required: [productGroupId, businessId, value, effectiveFrom, country]
 
+    OrderFullDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        specialRequest:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+              product:
+                $ref: '#/components/schemas/Product'
+              productVariation:
+                $ref: '#/components/schemas/ProductVariation'
+              price:
+                $ref: '#/components/schemas/ProductPrice'
+              discount:
+                $ref: '#/components/schemas/Discount'
+        totalBeforeDiscount:
+          type: number
+          format: decimal
+        totalDiscount:
+          type: number
+          format: decimal
+        totalAfterDiscount:
+          type: number
+          format: decimal
+      required:
+        [id, businessId, workerId, dateTime, status, items, totalAfterDiscount]
+
+    ReservationDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        customer:
+          $ref: '#/components/schemas/Customer'
+        business:
+          $ref: '#/components/schemas/Business'
+        reservationDate:
+          type: string
+          format: date-time
+        #status:
+        #  $ref: '#/components/schemas/ReservationStatus'
+        notes:
+          type: string
+          nullable: true
+      required: [id, businessId, customerId, reservationDate, status]
+
     # Enums & common
     PaymentType:
       type: string
@@ -1312,6 +1623,10 @@ components:
     OrderStatus:
       type: string
       enum: [InProgress, Canceled, Paid, Refunded]
+
+    WorkerStatus:
+      type: string
+      enum: [active, terminate]
 
     Error:
       type: object
