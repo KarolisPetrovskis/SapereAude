@@ -1,13 +1,13 @@
 openapi: 3.0.4
 info:
   title: Commerce Backend API (diagram-derived, updated)
-  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation/ProductPrice, Orders, Reservations, Discounts, TaxRates, Businesses and Users.
+  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation, Orders, Reservations, Discounts, TaxRates, Businesses and Users.
   version: 1.0.1
 servers:
   - url: https://api.example.com/v1
 tags:
   - name: Product
-    description: Product, ProductPrice, ProductVariation, ProductGroup operations
+    description: Product, ProductVariation, ProductGroup operations
   - name: Order
     description: Orders, order items and payments
   - name: Business
@@ -127,56 +127,6 @@ paths:
         '404':
           description: Product not found
 
-
-
-
-  /products/{productId}/prices:
-    parameters:
-      - name: productId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags: [Product]
-      summary: Get full price history for a product
-      description: |
-        Returns the full list of price records for a product, 
-        including all past, current, and future price changes.
-        Each record contains an effective date range.      
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductPrice'
-        '404':
-          description: Product not found
-    post:
-      tags: [Product]
-      summary: Create a product price
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductPriceCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductPrice'
-        '400':
-          description: Invalid input
-        '404':
-          description: Product not found
-
   /productVariations:
     get:
       tags: [Product]
@@ -256,97 +206,78 @@ paths:
                 $ref: '#/components/schemas/ProductVariation'
 
   /orders:
+    post:
+      summary: Create a new order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
     get:
-      tags: [Order]
-      summary: List orders
-      parameters:
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/OrderStatus'
-        - name: businessId
-          in: query
-          schema:
-            type: string
-            format: uuid
-        - name: UserId
-          in: query
-          schema:
-            type: string
-            format: uuid
+      summary: Get all orders
+      operationId: listOrders
       responses:
         '200':
-          description: OK
+          description: List of orders
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Order'
-
-    post:
-      tags: [Order]
-      summary: Create order
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrderCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Order'
-        '400':
-          description: Invalid input
+                  $ref: '#/components/schemas/OrderResponse'
 
   /orders/{orderId}:
-    parameters:
-      - name: orderId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
     get:
-      tags: [Order]
       summary: Get order by ID
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
-          description: OK
+          description: Order details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
-        '404':
-          description: Not found
+                $ref: '#/components/schemas/OrderResponse'
+
     put:
-      tags: [Order]
-      summary: Update an existing order
+      summary: Update order status or request
+      operationId: updateOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrderUpdate'
+              $ref: '#/components/schemas/OrderUpdateRequest'
       responses:
         '200':
-          description: Updated successfully
+          description: Order updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
-    delete:
-      tags: [Order]
-      summary: Delete order
-      responses:
-        '204':
-          description: Deleted
-        '404':
-          description: Not found
+                $ref: '#/components/schemas/OrderResponse'
 
   /orders/{orderId}/items:
     parameters:
@@ -369,25 +300,49 @@ paths:
                 items:
                   $ref: '#/components/schemas/OrderItem'
     post:
-      tags: [Order]
-      summary: Add an OrderItem to an order
+      summary: Add item to order
+      operationId: addOrderItem
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrderItemCreate'
+              $ref: '#/components/schemas/OrderItemCreateRequest'
       responses:
         '201':
-          description: Created
+          description: Item added to order
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderItem'
-        '400':
-          description: Invalid input
-        '404':
-          description: Order or Product not found
+                $ref: '#/components/schemas/OrderItemResponse'
+
+  /orders/{orderId}/items/{itemId}:
+    delete:
+      summary: Remove an item from order
+      operationId: removeOrderItem
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Item removed
 
   /order-payments:
     post:
@@ -458,7 +413,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/GetUsers'
     post:
       tags: [Business]
       summary: Create a User under a business
@@ -690,33 +645,6 @@ paths:
           description: Invalid or missing date range
         '404':
           description: No reservations found for the given business and period
-
-  /products/{productId}/price-history:
-    get:
-      tags: [ProductPrice]
-      summary: Get all price changes for a product
-      description: |
-        Returns the full price history for a product, including all effective date ranges.
-        Useful for displaying historical pricing trends or auditing.
-      parameters:
-        - name: productId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID of the product to retrieve price changes for
-      responses:
-        '200':
-          description: List of all product price records
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductPrice'
-        '404':
-          description: Product not found or no price history available
 
   /businesses/{businessId}/Users/{UserId}/salary:
     put:
@@ -1087,7 +1015,7 @@ paths:
         '404':
           description: Group or variation not found
 
-  /users/{userId}/password:
+  /Users/{userId}/FirstLogIn/password:
     put:
       tags: [User]
       summary: Change a user's password and mark first login as completed
@@ -1267,31 +1195,6 @@ paths:
         '404':
           description: Place not found
 
-  /products/{productId}/price/current:
-    get:
-      tags: [ProductPrice]
-      summary: Get current price for a product
-      description: |
-        Returns the currently active price record for the specified product.
-        The active price is determined where the current date falls within
-        the price's effective date range.
-      parameters:
-        - name: productId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Current price record
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductPrice'
-        '404':
-          description: Product not found or no active price available
-
 components:
   responses:
     InternalError:
@@ -1314,9 +1217,9 @@ components:
           format: uuid
         name:
           type: string
-        productPriceId:
-          type: string
-          format: uuid
+        price:
+          type: number
+          format: decimal
         maxServiceDuration:
           type: number
           format: float
@@ -1332,7 +1235,7 @@ components:
         tax:
           type: string
           format: uuid
-      required: [id, businessId, productPriceId, name, tax, productStatus]
+      required: [id, businessId, price, name, tax, productStatus]
 
     ProductCreate:
       type: object
@@ -1342,9 +1245,9 @@ components:
           format: uuid
         name:
           type: string
-        productPriceId:
-          type: string
-          format: uuid
+        price:
+          type: number
+          format: decimal
         productVariationGroup:
           type: array
           items:
@@ -1358,16 +1261,16 @@ components:
         tax:
           type: string
           format: uuid
-      required: [businessId, name, productPriceId, productStatus, tax]
+      required: [businessId, name, price, productStatus, tax]
 
     ProductUpdate:
       type: object
       properties:
         name:
           type: string
-        productPriceId:
-          type: string
-          format: uuid
+        price:
+          type: number
+          format: decimal
         maxServiceDuration:
           type: number
         productVariationGroup:
@@ -1378,50 +1281,6 @@ components:
           nullable: true
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
-
-    ProductPrice:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        productId:
-          type: string
-          format: uuid
-        effectiveFrom:
-          type: string
-          format: date-time
-          description: epoch
-        effectiveTo:
-          type: string
-          format: date-time
-          nullable: true
-          description: epoch or null
-        basePrice:
-          type: number
-          format: decimal
-      required: [id, productId, basePrice, effectiveFrom]
-
-    ProductPriceCreate:
-      type: object
-      properties:
-        productId:
-          type: string
-          format: uuid
-          description: The ID of the product this price applies to
-        effectiveFrom:
-          type: string
-          format: date-time
-          description: epoch
-        effectiveTo:
-          type: string
-          format: date-time
-          nullable: true
-          description: epoch
-        basePrice:
-          type: number
-          format: decimal
-      required: [productId, basePrice, effectiveFrom]
 
     ProductVariationGroup:
       type: object
@@ -1498,47 +1357,47 @@ components:
           nullable: true
       required: [id, UserId, businessId, dateTime, status, orderItemId, price]
 
-    OrderCreate:
+    OrderCreateRequest:
       type: object
+      required:
+        - userId
+        - items
       properties:
-        UserId:
+        userId:
           type: string
           format: uuid
-        businessId:
+        discountId:
           type: string
           format: uuid
-        dateTime:
-          type: string
-          format: date-time
-          description: epoch
-        status:
-          $ref: '#/components/schemas/OrderStatus'
+          nullable: true
         specialRequest:
           type: string
           nullable: true
-        price:
-          type: number
-          format: decimal
         items:
           type: array
           items:
-            $ref: '#/components/schemas/OrderItemCreate'
-      required: [UserId, businessId, dateTime, items, price]
+            $ref: '#/components/schemas/OrderItemCreateRequest'
 
-    OrderUpdate:
+    OrderItemCreateRequest:
       type: object
+      required:
+        - productId
+        - amount
       properties:
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-        specialRequest:
+        productId:
           type: string
-        items:
+          format: uuid
+        productVariationGroup:
           type: array
           items:
-            $ref: '#/components/schemas/OrderItemCreate'
-        price:
-          type: number
-          format: decimal
+            type: string
+            format: uuid
+        discountId:
+          type: string
+          nullable: true
+          format: uuid
+        amount:
+          type: integer
 
     OrderItem:
       type: object
@@ -1561,6 +1420,7 @@ components:
         price:
           type: number
           format: decimal
+          default: 0
         isAltered:
           type: array
           items:
@@ -1572,6 +1432,90 @@ components:
             format: uuid
           nullable: true
       required: [id, orderId, productId, amount, price, isAltered]
+
+    OrderItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productVariationGroup:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        discountId:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: integer
+        price:
+          type: number
+          format: decimal
+        isAltered:
+          type: boolean
+      required: [id, orderId, productId, amount, price]
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        businesses:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        discountId:
+          type: string
+          format: uuid
+          nullable: true
+        price:
+          type: number
+          format: decimal
+        dateTime:
+          type: integer
+          format: epoch
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        specialRequest:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemResponse'
+
+    OrderUpdateRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+          description: Update order status (e.g. Pending -> Confirmed -> Completed)
+        specialRequest:
+          type: string
+          nullable: true
+          description: Customer request or note
+        discountId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional discount applied to order
+      description: >
+        Used to partially update an order. Does not allow modifying total price or items.
 
     OrderItemCreate:
       type: object
@@ -1627,7 +1571,7 @@ components:
           type: number
           format: decimal
           nullable: true
-      required: [id, orderId, paymentSum, paymentType, dateTime, products]
+      required: [id, orderId, paymentType, dateTime, products]
 
     OrderPaymentCreate:
       type: object
@@ -1640,16 +1584,13 @@ components:
           items:
             type: string
             format: uuid
-        paymentSum:
-          type: number
-          format: decimal
         paymentType:
           $ref: '#/components/schemas/PaymentType'
         tip:
           type: number
           format: decimal
           nullable: true
-      required: [orderId, paymentSum, paymentType, products]
+      required: [orderId, paymentType, products]
 
     Business:
       type: object
@@ -1732,6 +1673,30 @@ components:
           password,
           firstLogin,
         ]
+
+    GetUsers:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        surname:
+          type: string
+        salary:
+          type: number
+          format: decimal
+          nullable: true
+        employmentStatus:
+          $ref: '#/components/schemas/UserStatus'
+        permissionLevel:
+          type: integer
+      required:
+        [id, name, surname, permissionLevel, businessId, employmentStatus]
 
     UserCreate:
       type: object
@@ -2032,7 +1997,8 @@ components:
               productVariation:
                 $ref: '#/components/schemas/ProductVariation'
               price:
-                $ref: '#/components/schemas/ProductPrice'
+                type: number
+                format: decima
               discount:
                 $ref: '#/components/schemas/Discount'
         totalBeforeDiscount:
