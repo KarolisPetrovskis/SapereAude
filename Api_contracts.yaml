@@ -766,7 +766,7 @@ paths:
 
   /products/{productId}/tax:
     get:
-      tags: [TaxRate]
+      tags: [Tax]
       summary: Get tax rate for a specific product
       description: |
         Returns the applicable tax rate for a product. 
@@ -955,7 +955,7 @@ paths:
 
   /taxRates/{taxRateId}:
     put:
-      tags: [TaxRate]
+      tags: [Tax]
       summary: Update an existing tax rate
       description: |
         Updates the details of a tax rate, such as its percentage or description.
@@ -1267,79 +1267,6 @@ paths:
         '404':
           description: Place not found
 
-
-  /statistics/{businessId}/overview:
-    get:
-      tags: [Statistics]
-      summary: Get overall business statistics
-      description: |
-        Returns aggregated statistics including total revenue, total reservations,
-        total discounts applied, and worker performance summaries.
-      parameters:
-        - name: businessId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: fromDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date-time
-        - name: toDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date-time
-      responses:
-        '200':
-          description: Aggregated business statistics
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatisticsOverview'
-        '404':
-          description: Business not found
-
-  /statistics/{businessId}/history:
-    get:
-      tags: [Statistics]
-      summary: Get detailed order and reservation history
-      description: |
-        Returns detailed historical data of orders and reservations for the business,
-        including revenue trends and busiest periods.
-      parameters:
-        - name: businessId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: fromDate
-          in: query
-          schema:
-            type: string
-            format: date-time
-        - name: toDate
-          in: query
-          schema:
-            type: string
-            format: date-time
-      responses:
-        '200':
-          description: Historical data returned successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StatisticsRecord'
-        '404':
-          description: No data found
-
   /products/{productId}/price/current:
     get:
       tags: [ProductPrice]
@@ -1364,94 +1291,6 @@ paths:
                 $ref: '#/components/schemas/ProductPrice'
         '404':
           description: Product not found or no active price available
-
-  /businesses/{businessId}/statistics:
-    get:
-      tags: [StatisticsAndHistory]
-      summary: Get current business statistics
-      description: |
-        Returns aggregated business statistics including current revenue, 
-        active reservations, top products, and worker performance.
-      parameters:
-        - name: businessId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Current business statistics
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatisticsAndHistory'
-        '404':
-          description: Business not found
-
-  /businesses/{businessId}/statistics/history:
-    get:
-      tags: [StatisticsAndHistory]
-      summary: Get historical performance data for a business
-      description: |
-        Returns a list of historical statistical records for the business, 
-        including daily or monthly revenue, orders, and reservations.
-      parameters:
-        - name: businessId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: fromDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date-time
-        - name: toDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date-time
-      responses:
-        '200':
-          description: Historical statistics retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StatisticsAndHistory'
-        '404':
-          description: Business not found or no data available
-
-  /workers/{workerId}/statistics:
-    get:
-      tags: [StatisticsAndHistory]
-      summary: Get performance statistics for a specific worker
-      description: |
-        Returns aggregated performance data for the specified worker, 
-        including total handled orders, total revenue, and customer satisfaction metrics.
-      parameters:
-        - name: workerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Worker performance statistics
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatisticsAndHistory'
-        '404':
-          description: Worker not found or no data available
-
-
 
 components:
   responses:
@@ -2158,81 +1997,6 @@ components:
         isActive:
           type: boolean
 
-
-    StatisticsAndHistory:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        orders:
-          type: array
-          items:
-            type: string
-            format: uuid
-        orderItems:
-          type: array
-          items:
-            type: string
-            format: uuid
-        orderPayment:
-          type: array
-          items:
-            type: string
-            format: uuid
-        products:
-          type: array
-          items:
-            type: string
-            format: uuid
-        productPrices:
-          type: array
-          items:
-            type: string
-            format: uuid
-        productVariations:
-          type: array
-          items:
-            type: string
-            format: uuid
-        discounts:
-          type: array
-          items:
-            type: string
-            format: uuid
-        reservations:
-          type: array
-          items:
-            type: string
-            format: uuid
-        tax:
-          type: array
-          items:
-            type: string
-            format: uuid
-        date:
-          type: string
-          format: date-time
-          description: epoch
-        income:
-          type: number
-          format: decimal
-      required:
-        [
-          id,
-          orders,
-          orderItems,
-          orderPayment,
-          products,
-          productPrices,
-          productVariations,
-          discounts,
-          reservations,
-          tax,
-          date,
-          income,
-        ]
-
     OrderFullDetail:
       type: object
       properties:
@@ -2311,52 +2075,6 @@ components:
           type: string
           nullable: true
       required: [id, businessId, name, phoneNumber, reservationDate]
-
-    StatisticsOverview:
-      type: object
-      properties:
-        businessId:
-          type: string
-          format: uuid
-        totalRevenue:
-          type: number
-          format: decimal
-        totalOrders:
-          type: integer
-        totalReservations:
-          type: integer
-        averageOrderValue:
-          type: number
-          format: decimal
-        topWorker:
-          type: string
-          description: Worker with highest sales or performance
-        topProduct:
-          type: string
-          description: Most frequently ordered product
-        generatedAt:
-          type: string
-          format: date-time
-      required: [businessId, totalRevenue, totalOrders, totalReservations, generatedAt]
-
-    StatisticsRecord:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date-time
-        revenue:
-          type: number
-          format: decimal
-        orderCount:
-          type: integer
-        reservationCount:
-          type: integer
-        averageOrderValue:
-          type: number
-          format: decimal
-      required: [date, revenue, orderCount]
-
 
     # Enums & common
     PaymentType:
