@@ -1472,7 +1472,7 @@ components:
         password:
           type: string
           format: password
-      required: [name, surname, permissionLevel, password, password]
+      required: [name, surname, permissionLevel, password]
 
     # Reservations
     Reservation:
