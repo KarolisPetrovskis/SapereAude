@@ -1300,12 +1300,12 @@ components:
           format: uuid
           nullable: true
           description: 'Required for existing variations, null for new variations'
-        option:
+        name:
           type: string
         priceModifier:
           type: number
           format: decimal
-      required: [option, priceModifier]
+      required: [name, priceModifier]
 
     ProductVariationGroup:
       type: object
@@ -1940,7 +1940,7 @@ components:
         id:
           type: string
           format: uuid
-        name:
+        placeName:
           type: string
         placeNumber:
           type: integer
@@ -1951,13 +1951,13 @@ components:
     PlaceCreate:
       type: object
       properties:
-        name:
+        placeName:
           type: string
         placeNumber:
           type: integer
         placeType:
           $ref: '#/components/schemas/PlaceType'
-      required: [name, placeType]
+      required: [placeNumber, placeType]
 
     PlaceUpdate:
       type: object
