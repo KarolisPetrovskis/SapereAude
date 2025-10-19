@@ -529,7 +529,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TaxRate'
+                $ref: '#/components/schemas/TaxRate'
     post:
       tags: [Tax]
       summary: Create tax rate (business-scoped)
@@ -1268,6 +1268,9 @@ components:
             type: string
             format: uuid
           nullable: true
+        tax:
+          type: string
+          format: uuid
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
 
@@ -2008,8 +2011,6 @@ components:
         reservationDate:
           type: string
           format: date-time
-        #status:
-        #  $ref: '#/components/schemas/ReservationStatus'
         request:
           type: string
           nullable: true
