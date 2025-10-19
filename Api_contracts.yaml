@@ -572,7 +572,7 @@ paths:
             type: string
             format: uuid
           description: ID of the business to retrieve reservations for
-        - name: customerId
+        - name: phoneNumber
           in: query
           required: false
           schema:
@@ -1328,22 +1328,22 @@ components:
         id:
           type: string
           format: uuid
-        name:
+        option:
           type: string
         priceModifier:
           type: number
           format: decimal
-      required: [id, priceModifier, name]
+      required: [id, priceModifier, option]
 
     ProductVariationCreate:
       type: object
       properties:
-        name:
+        option:
           type: string
         priceModifier:
           type: number
           format: decimal
-      required: [priceModifier, name]
+      required: [priceModifier, option]
 
     # Orders & items & payments
     Order:
@@ -1940,21 +1940,17 @@ components:
         id:
           type: string
           format: uuid
-        name:
-          type: string
         placeNumber:
           type: integer
-        placeType:
+        type:
           $ref: '#/components/schemas/PlaceType'
-      required: [id, placeNumber, placeType]
+      required: [id, placeNumber, type]
 
     PlaceCreate:
       type: object
       properties:
         name:
           type: string
-        placeNumber:
-          type: integer
         placeType:
           $ref: '#/components/schemas/PlaceType'
       required: [name, placeType]
@@ -1964,8 +1960,6 @@ components:
       properties:
         name:
           type: string
-        placeNumber:
-          type: integer
         placeType:
           $ref: '#/components/schemas/PlaceType'
 
