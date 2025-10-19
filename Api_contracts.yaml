@@ -127,6 +127,9 @@ paths:
         '404':
           description: Product not found
 
+
+
+
   /products/{productId}/prices:
     parameters:
       - name: productId
@@ -137,7 +140,11 @@ paths:
           format: uuid
     get:
       tags: [Product]
-      summary: List all product prices (for product & variations)
+      summary: Get full price history for a product
+      description: |
+        Returns the full list of price records for a product, 
+        including all past, current, and future price changes.
+        Each record contains an effective date range.      
       responses:
         '200':
           description: OK
@@ -151,7 +158,7 @@ paths:
           description: Product not found
     post:
       tags: [Product]
-      summary: Create a product price (relationship to ProductVariation optional)
+      summary: Create a product price
       requestBody:
         required: true
         content:
@@ -279,7 +286,7 @@ paths:
 
     post:
       tags: [Order]
-      summary: Create order (with inline items allowed)
+      summary: Create order
       requestBody:
         required: true
         content:
@@ -616,7 +623,7 @@ paths:
   /reservations/all:
     get:
       tags: [Reservation]
-      summary: List all reservations for a business
+      summary: List all reservations in system
       parameters:
         - name: businessId
           in: query
@@ -1080,40 +1087,6 @@ paths:
         '404':
           description: Group or variation not found
 
-  /productVariationGroups/{groupId}/cost:
-    put:
-      tags: [ProductVariationGroup]
-      summary: Update costs for variations in a group
-      description: Bulk update of cost adjustments for product variations within the group.
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  variationId:
-                    type: string
-                    format: uuid
-                  additionalCost:
-                    type: number
-                    format: decimal
-                required: [variationId, additionalCost]
-      responses:
-        '200':
-          description: Costs updated successfully
-        '404':
-          description: Group or variations not found
-
   /users/{userId}/password:
     put:
       tags: [User]
@@ -1366,6 +1339,117 @@ paths:
                   $ref: '#/components/schemas/StatisticsRecord'
         '404':
           description: No data found
+
+  /products/{productId}/price/current:
+    get:
+      tags: [ProductPrice]
+      summary: Get current price for a product
+      description: |
+        Returns the currently active price record for the specified product.
+        The active price is determined where the current date falls within
+        the price's effective date range.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current price record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPrice'
+        '404':
+          description: Product not found or no active price available
+
+  /businesses/{businessId}/statistics:
+    get:
+      tags: [StatisticsAndHistory]
+      summary: Get current business statistics
+      description: |
+        Returns aggregated business statistics including current revenue, 
+        active reservations, top products, and worker performance.
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current business statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsAndHistory'
+        '404':
+          description: Business not found
+
+  /businesses/{businessId}/statistics/history:
+    get:
+      tags: [StatisticsAndHistory]
+      summary: Get historical performance data for a business
+      description: |
+        Returns a list of historical statistical records for the business, 
+        including daily or monthly revenue, orders, and reservations.
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Historical statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StatisticsAndHistory'
+        '404':
+          description: Business not found or no data available
+
+  /workers/{workerId}/statistics:
+    get:
+      tags: [StatisticsAndHistory]
+      summary: Get performance statistics for a specific worker
+      description: |
+        Returns aggregated performance data for the specified worker, 
+        including total handled orders, total revenue, and customer satisfaction metrics.
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Worker performance statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsAndHistory'
+        '404':
+          description: Worker not found or no data available
 
 
 
