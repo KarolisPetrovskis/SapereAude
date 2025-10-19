@@ -30,7 +30,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: productGroupId
+        - name: productVariationGroupId
           in: query
           schema:
             type: string
@@ -137,7 +137,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: productGroupId
+        - name: productVariationGroupId
           in: query
           schema:
             type: string
@@ -516,14 +516,9 @@ paths:
   /taxRates:
     get:
       tags: [Tax]
-      summary: List tax rates
+      summary: Get tax rate
       parameters:
-        - name: productGroupId
-          in: query
-          schema:
-            type: string
-            format: uuid
-        - name: businessId
+        - name: taxId
           in: query
           schema:
             type: string
@@ -534,8 +529,6 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
                   $ref: '#/components/schemas/TaxRate'
     post:
       tags: [Tax]
@@ -886,7 +879,7 @@ paths:
       tags: [Tax]
       summary: Update an existing tax rate
       description: |
-        Updates the details of a tax rate, such as its percentage or description.
+        Updates the details of a tax rate
         Used by business administrators when tax regulations or pricing rules change.
       parameters:
         - name: taxRateId
@@ -903,20 +896,23 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  type: string
-                  description: The name of the tax rate
-                percentage:
+                value:
                   type: number
                   format: decimal
-                  description: The new percentage rate
-                description:
+                effectiveFrom:
+                  type: string
+                  format: date-time
+                  description: epoch
+                effectiveTo:
+                  type: string
+                  format: date-time
+                  description: epoch
+                  nullable: true
+                country:
+                  type: string
+                region:
                   type: string
                   nullable: true
-                businessId:
-                  type: string
-                  format: uuid
-              required: [percentage]
       responses:
         '200':
           description: Tax rate updated successfully
@@ -1212,9 +1208,8 @@ components:
         price:
           type: number
           format: decimal
-        maxServiceDuration:
-          type: number
-          format: float
+        description:
+          type: string
           nullable: true
         productVariationGroup:
           type: array
@@ -1246,8 +1241,9 @@ components:
             type: string
             format: uuid
           nullable: true
-        maxServiceDuration:
-          type: number
+        description:
+          type: string
+          nullable: true
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
         tax:
@@ -1263,8 +1259,9 @@ components:
         price:
           type: number
           format: decimal
-        maxServiceDuration:
-          type: number
+        description:
+          type: string
+          nullable: true
         productVariationGroup:
           type: array
           items:
@@ -1892,9 +1889,6 @@ components:
     TaxRateCreate:
       type: object
       properties:
-        businessId:
-          type: string
-          format: uuid
         value:
           type: number
           format: decimal
@@ -1910,7 +1904,7 @@ components:
           type: string
         region:
           type: string
-      required: [businessId, value, effectiveFrom, country]
+      required: [value, effectiveFrom, country]
 
     Place:
       type: object
@@ -1927,32 +1921,19 @@ components:
     PlaceCreate:
       type: object
       properties:
-        businessId:
-          type: string
-          format: uuid
         name:
           type: string
-        description:
-          type: string
-          nullable: true
-        capacity:
-          type: integer
-        isActive:
-          type: boolean
-      required: [businessId, name, capacity]
+        placeType:
+          $ref: '#/components/schemas/PlaceType'
+      required: [name, placeType]
 
     PlaceUpdate:
       type: object
       properties:
         name:
           type: string
-        description:
-          type: string
-          nullable: true
-        capacity:
-          type: integer
-        isActive:
-          type: boolean
+        placeType:
+          $ref: '#/components/schemas/PlaceType'
 
     OrderFullDetail:
       type: object
