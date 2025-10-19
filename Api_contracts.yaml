@@ -53,7 +53,7 @@ paths:
           $ref: '#/components/responses/InternalError'
     post:
       tags: [Product]
-      summary: Create product
+      summary: Create product with variations
       requestBody:
         required: true
         content:
@@ -62,11 +62,11 @@ paths:
               $ref: '#/components/schemas/ProductCreate'
       responses:
         '201':
-          description: Created
+          description: Product created successfully with variations
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductWithVariations'
         '400':
           description: Invalid input
         '422':
@@ -84,14 +84,6 @@ paths:
     get:
       tags: [Product]
       summary: Get product by id (with variations)
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: Product ID
       responses:
         '200':
           description: OK
@@ -104,7 +96,7 @@ paths:
 
     put:
       tags: [Product]
-      summary: Update existing product
+      summary: Update existing product with variations
       requestBody:
         required: true
         content:
@@ -113,13 +105,15 @@ paths:
               $ref: '#/components/schemas/ProductUpdate'
       responses:
         '200':
-          description: Product updated
+          description: Product updated successfully with variations
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductWithVariations'
         '404':
           description: Product not found
+        '400':
+          description: Invalid input for product or var
 
     delete:
       tags: [Product]
@@ -1238,12 +1232,6 @@ components:
         price:
           type: number
           format: decimal
-        productVariationGroup:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
         description:
           type: string
           nullable: true
@@ -1253,7 +1241,23 @@ components:
         tax:
           type: string
           format: uuid
+        variationGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariationGroupCreate'
+          nullable: true
       required: [businessId, name, price, tax]
+
+    ProductVariationGroupCreate:
+      type: object
+      properties:
+        group:
+          type: string
+        variations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariationCreate'
+      required: [group, variations]
 
     ProductUpdate:
       type: object
@@ -1266,17 +1270,47 @@ components:
         description:
           type: string
           nullable: true
-        productVariationGroup:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
         tax:
           type: string
           format: uuid
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
+        variationGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariationGroupUpdate'
+          nullable: true
+
+    ProductVariationGroupUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          description: 'Required for existing groups, null for new groups'
+        group:
+          type: string
+        variations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariationUpdate'
+      required: [group, variations]
+
+    ProductVariationUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          description: 'Required for existing variations, null for new variations'
+        option:
+          type: string
+        priceModifier:
+          type: number
+          format: decimal
+      required: [option, priceModifier]
 
     ProductVariationGroup:
       type: object
@@ -1313,6 +1347,7 @@ components:
           type: string
         priceModifier:
           type: number
+          format: decimal
       required: [priceModifier, option]
 
     # Orders & items & payments
@@ -1699,13 +1734,10 @@ components:
           type: integer
         salary:
           type: number
-        password:
-          type: string
-          format: password
         businessId:
           type: string
           format: uuid
-      required: [name, surname, businessId, permissionLevel, password, salary]
+      required: [name, surname, businessId, permissionLevel, salary]
 
     # Reservations
     Reservation:
@@ -1805,7 +1837,7 @@ components:
         businessId:
           type: string
           format: uuid
-        productOrOrderId:
+        productId:
           type: string
           format: uuid
           nullable: true
