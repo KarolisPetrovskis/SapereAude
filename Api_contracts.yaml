@@ -1,7 +1,7 @@
 openapi: 3.0.4
 info:
-  title: Commerce Backend API (diagram-derived, updated)
-  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation/ProductPrice, Orders, Reservations, Discounts, TaxRates, Businesses and Workers.
+  title: PoS Backend API
+  description: API contracts of PoS system.
   version: 1.0.1
 servers:
   - url: https://api.example.com/v1
