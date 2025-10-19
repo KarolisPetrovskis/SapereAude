@@ -30,11 +30,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: productVariationGroupId
-          in: query
-          schema:
-            type: string
-            format: uuid
         - name: offset
           in: query
           schema:
@@ -88,14 +83,22 @@ paths:
 
     get:
       tags: [Product]
-      summary: Get product by id
+      summary: Get product by id (with variations)
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Product ID
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductWithVariations'
         '404':
           description: Product not found
 
@@ -1246,10 +1249,11 @@ components:
           nullable: true
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
+          default: Available
         tax:
           type: string
           format: uuid
-      required: [businessId, name, price, productStatus, tax]
+      required: [businessId, name, price, tax]
 
     ProductUpdate:
       type: object
@@ -1590,12 +1594,6 @@ components:
         id:
           type: string
           format: uuid
-        statistics:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
         name:
           type: string
         country:
@@ -1974,7 +1972,7 @@ components:
                 $ref: '#/components/schemas/ProductVariation'
               price:
                 type: number
-                format: decima
+                format: decimal
               discount:
                 $ref: '#/components/schemas/Discount'
         totalBeforeDiscount:
@@ -1988,6 +1986,47 @@ components:
           format: decimal
       required:
         [id, businessId, UserId, dateTime, status, items, totalAfterDiscount]
+
+    ProductWithVariations:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        basePrice:
+          type: number
+          format: decimal
+        tax:
+          type: string
+          format: uuid
+          nullable: true
+        maxServiceDuration:
+          type: number
+          nullable: true
+        productStatus:
+          $ref: '#/components/schemas/ProductStatus'
+        variationGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariationGroupWithOptions'
+
+    ProductVariationGroupWithOptions:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group:
+          type: string
+        variations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariation'
 
     ReservationDetail:
       type: object
@@ -2006,8 +2045,6 @@ components:
           type: string
           format: uuid
           nullable: true
-        business:
-          $ref: '#/components/schemas/Business'
         reservationDate:
           type: string
           format: date-time
