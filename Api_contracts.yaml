@@ -142,7 +142,7 @@ paths:
               $ref: '#/components/schemas/ProductCreate'
       responses:
         '201':
-          description: Created
+          description: Product created successfully with variations
           content:
             application/json:
               schema:
@@ -176,7 +176,7 @@ paths:
 
     put:
       tags: [Product]
-      summary: Update existing product
+      summary: Update existing product with variations
       requestBody:
         required: true
         content:
@@ -185,7 +185,7 @@ paths:
               $ref: '#/components/schemas/ProductCreate'
       responses:
         '200':
-          description: Product updated
+          description: Product updated successfully with variations
           content:
             application/json:
               schema:
@@ -2060,20 +2060,20 @@ components:
         id:
           type: string
           format: uuid
-        placeNumber:
-          type: integer
+        placeName:
+          type: string
         type:
           $ref: '#/components/schemas/PlaceType'
-      required: [id, placeNumber, type]
+      required: [id, placeName, type]
 
     PlaceCreate:
       type: object
       properties:
-        name:
+        placeName:
           type: string
         placeType:
           $ref: '#/components/schemas/PlaceType'
-      required: [name, placeType]
+      required: [placeName, placeType]
 
     PlaceUpdate:
       type: object
