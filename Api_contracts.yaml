@@ -1,13 +1,13 @@
 openapi: 3.0.4
 info:
   title: Commerce Backend API (diagram-derived, updated)
-  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation/ProductPrice, Orders, Reservations, Discounts, TaxRates, Businesses and Users.
+  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation, Orders, Reservations, Discounts, TaxRates, Businesses and Users.
   version: 1.0.1
 servers:
   - url: https://api.example.com/v1
 tags:
   - name: Product
-    description: Product, ProductPrice, ProductVariation, ProductGroup operations
+    description: Product, ProductVariation, ProductGroup operations
   - name: Order
     description: Orders, order items and payments
   - name: Business
@@ -124,56 +124,6 @@ paths:
       responses:
         '204':
           description: Deleted
-        '404':
-          description: Product not found
-
-
-
-
-  /products/{productId}/prices:
-    parameters:
-      - name: productId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags: [Product]
-      summary: Get full price history for a product
-      description: |
-        Returns the full list of price records for a product, 
-        including all past, current, and future price changes.
-        Each record contains an effective date range.      
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductPrice'
-        '404':
-          description: Product not found
-    post:
-      tags: [Product]
-      summary: Create a product price
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductPriceCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductPrice'
-        '400':
-          description: Invalid input
         '404':
           description: Product not found
 
@@ -690,33 +640,6 @@ paths:
           description: Invalid or missing date range
         '404':
           description: No reservations found for the given business and period
-
-  /products/{productId}/price-history:
-    get:
-      tags: [ProductPrice]
-      summary: Get all price changes for a product
-      description: |
-        Returns the full price history for a product, including all effective date ranges.
-        Useful for displaying historical pricing trends or auditing.
-      parameters:
-        - name: productId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID of the product to retrieve price changes for
-      responses:
-        '200':
-          description: List of all product price records
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductPrice'
-        '404':
-          description: Product not found or no price history available
 
   /businesses/{businessId}/Users/{UserId}/salary:
     put:
@@ -1267,31 +1190,6 @@ paths:
         '404':
           description: Place not found
 
-  /products/{productId}/price/current:
-    get:
-      tags: [ProductPrice]
-      summary: Get current price for a product
-      description: |
-        Returns the currently active price record for the specified product.
-        The active price is determined where the current date falls within
-        the price's effective date range.
-      parameters:
-        - name: productId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Current price record
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductPrice'
-        '404':
-          description: Product not found or no active price available
-
 components:
   responses:
     InternalError:
@@ -1314,9 +1212,9 @@ components:
           format: uuid
         name:
           type: string
-        productPriceId:
-          type: string
-          format: uuid
+        price:
+          type: number
+          format: decimal
         maxServiceDuration:
           type: number
           format: float
@@ -1332,7 +1230,7 @@ components:
         tax:
           type: string
           format: uuid
-      required: [id, businessId, productPriceId, name, tax, productStatus]
+      required: [id, businessId, price, name, tax, productStatus]
 
     ProductCreate:
       type: object
@@ -1342,9 +1240,9 @@ components:
           format: uuid
         name:
           type: string
-        productPriceId:
-          type: string
-          format: uuid
+        price:
+          type: number
+          format: decimal
         productVariationGroup:
           type: array
           items:
@@ -1358,16 +1256,16 @@ components:
         tax:
           type: string
           format: uuid
-      required: [businessId, name, productPriceId, productStatus, tax]
+      required: [businessId, name, price, productStatus, tax]
 
     ProductUpdate:
       type: object
       properties:
         name:
           type: string
-        productPriceId:
-          type: string
-          format: uuid
+        price:
+          type: number
+          format: decimal
         maxServiceDuration:
           type: number
         productVariationGroup:
@@ -1378,50 +1276,6 @@ components:
           nullable: true
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
-
-    ProductPrice:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        productId:
-          type: string
-          format: uuid
-        effectiveFrom:
-          type: string
-          format: date-time
-          description: epoch
-        effectiveTo:
-          type: string
-          format: date-time
-          nullable: true
-          description: epoch or null
-        basePrice:
-          type: number
-          format: decimal
-      required: [id, productId, basePrice, effectiveFrom]
-
-    ProductPriceCreate:
-      type: object
-      properties:
-        productId:
-          type: string
-          format: uuid
-          description: The ID of the product this price applies to
-        effectiveFrom:
-          type: string
-          format: date-time
-          description: epoch
-        effectiveTo:
-          type: string
-          format: date-time
-          nullable: true
-          description: epoch
-        basePrice:
-          type: number
-          format: decimal
-      required: [productId, basePrice, effectiveFrom]
 
     ProductVariationGroup:
       type: object
@@ -2032,7 +1886,8 @@ components:
               productVariation:
                 $ref: '#/components/schemas/ProductVariation'
               price:
-                $ref: '#/components/schemas/ProductPrice'
+                type: number
+                format: decimal
               discount:
                 $ref: '#/components/schemas/Discount'
         totalBeforeDiscount:
