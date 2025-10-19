@@ -431,13 +431,8 @@ paths:
   /reservations:
     get:
       tags: [Reservation]
-      summary: List reservations
+      summary: List reservations belonging to a specific bussiness
       parameters:
-        - name: customerId
-          in: query
-          schema:
-            type: string
-            format: uuid
         - name: businessId
           in: query
           schema:
@@ -568,7 +563,7 @@ paths:
   /reservations/all:
     get:
       tags: [Reservation]
-      summary: List all reservations in system
+      summary: List of all reservations in system
       parameters:
         - name: businessId
           in: query
