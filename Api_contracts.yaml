@@ -29,7 +29,7 @@ paths:
     post:
       tags: [Auth]
       summary: User login
-      security: []  # No auth required for login
+      security: []  
       requestBody:
         required: true
         content:
@@ -228,6 +228,7 @@ paths:
 
   /orders:
     post:
+      tags: [Order]
       summary: Create a new order
       operationId: createOrder
       requestBody:
@@ -245,6 +246,7 @@ paths:
                 $ref: '#/components/schemas/OrderResponse'
 
     get:
+      tags: [Order]
       summary: Get all orders
       operationId: listOrders
       responses:
@@ -259,6 +261,7 @@ paths:
 
   /orders/{orderId}:
     get:
+      tags: [Order]
       summary: Get order by ID
       operationId: getOrderById
       parameters:
@@ -277,6 +280,7 @@ paths:
                 $ref: '#/components/schemas/OrderResponse'
 
     put:
+      tags: [Order]
       summary: Update order status or request
       operationId: updateOrder
       parameters:
@@ -321,6 +325,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/OrderItem'
     post:
+      tags: [Order]
       summary: Add item to order
       operationId: addOrderItem
       parameters:
@@ -346,6 +351,7 @@ paths:
 
   /orders/{orderId}/items/{itemId}:
     delete:
+      tags: [Order]
       summary: Remove an item from order
       operationId: removeOrderItem
       parameters:
@@ -912,7 +918,9 @@ paths:
       tags: [User]
       summary: Reset user password (auto-generates new password)
       description: |
-        Generates a new one-time password for the user. Can be performed by admin or user themselves.
+        Generates a new one-time password for the user. 
+        For employee users: can only be performed by a manager.
+        For non-employee users: can be performed by the user themselves or an admin.
         User must change the password on next login.
       parameters:
         - name: UserId
@@ -1058,6 +1066,26 @@ paths:
                 $ref: '#/components/schemas/ProductVariationGroup'
         '400':
           description: Invalid input
+
+  /productVariationGroups/{groupId}:
+    delete:
+      tags: [ProductVariationGroup]
+      summary: Delete a product variation group
+      description: Deletes a product variation group. This will also remove all variations from this group.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Group deleted successfully
+        '404':
+          description: Group not found
+        '409':
+          description: Cannot delete group that is in use by products
 
   /productVariationGroups/{groupId}/variations:
     post:
@@ -1928,7 +1956,7 @@ components:
         businessId:
           type: string
           format: uuid
-        productOrOrderId:
+        productId:
           type: string
           format: uuid
           nullable: true
@@ -2095,7 +2123,7 @@ components:
                 $ref: '#/components/schemas/ProductVariation'
               price:
                 type: number
-                format: decima
+                format: decimal
               discount:
                 $ref: '#/components/schemas/Discount'
         totalBeforeDiscount:
