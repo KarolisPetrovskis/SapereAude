@@ -901,6 +901,122 @@ paths:
         '404':
           description: Worker not found or no orders available
 
+  /workers/{workerId}/permission:
+    put:
+      tags: [Worker]
+      summary: Update a worker's permission level
+      description: |
+        Updates the access or permission level of a specific worker.
+        This can be used by business administrators to promote or restrict worker privileges.
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the worker whose permission level will be updated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissionLevel:
+                  type: string
+                  enum: [Owner, Manager, Employee, Trainee]
+                  description: The new permission level to assign
+              required: [permissionLevel]
+      responses:
+        '200':
+          description: Permission level updated successfully
+        '400':
+          description: Invalid permission level
+        '404':
+          description: Worker not found
+
+  /workers/{workerId}/password:
+    put:
+      tags: [Worker]
+      summary: Change a worker's password
+      description: |
+        Allows a worker or administrator to change the worker's account password.
+        If performed by the worker themselves, oldPassword is required.
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the worker whose password is being changed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  description: The current password (required if self-service)
+                newPassword:
+                  type: string
+                  minLength: 8
+                  description: The new password
+              required: [newPassword]
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Invalid request or password format
+        '404':
+          description: Worker not found
+        '401':
+          description: Incorrect old password
+
+  /workers/{workerId}/reservations/current:
+    get:
+      tags: [Reservation]
+      summary: Get current and upcoming reservations for a worker
+      description: |
+        Retrieves all reservations assigned to a specific worker that are currently active
+        or scheduled for the future. Useful for daily or weekly scheduling.
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the worker whose reservations to retrieve
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional start of the period (defaults to now)
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional end of the period
+      responses:
+        '200':
+          description: List of current and upcoming reservations for the worker
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+        '404':
+          description: Worker not found or no reservations available
+
 components:
   responses:
     InternalError:
@@ -1326,18 +1442,21 @@ components:
         surname:
           type: string
         permissionLevel:
-          type: array
-          items:
-            type: integer
+          type: integer
         businessId:
           type: string
           format: uuid
         salary:
           type: number
           nullable: true
+        password:
+          type: string
+          format: password
+          description: encrypted password
         WorkerStatus:
           $ref: '#/components/schemas/WorkerStatus'
-      required: [id, name, surname, permissionLevel, businessId, WorkerStatus]
+      required:
+        [id, name, surname, permissionLevel, businessId, WorkerStatus, password]
 
     WorkerCreate:
       type: object
@@ -1347,12 +1466,13 @@ components:
         surname:
           type: string
         permissionLevel:
-          type: array
-          items:
-            type: integer
+          type: integer
         salary:
           type: number
-      required: [name, surname, permissionLevel]
+        password:
+          type: string
+          format: password
+      required: [name, surname, permissionLevel, password, password]
 
     # Reservations
     Reservation:
