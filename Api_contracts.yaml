@@ -811,8 +811,6 @@ paths:
       summary: Get tax rate for a specific product
       description: |
         Returns the applicable tax rate for a product. 
-        The tax rate may be determined by the product's assigned tax type, 
-        product group, or business tax configuration.
       parameters:
         - name: productId
           in: path
@@ -837,7 +835,6 @@ paths:
       summary: Get all orders created or handled by a specific User
       description: |
         Retrieves a list of all orders associated with a given User.
-        Useful for tracking User performance, activity, or daily workload.
       parameters:
         - name: UserId
           in: path
@@ -920,7 +917,6 @@ paths:
       description: |
         Generates a new one-time password for the user. 
         For employee users: can only be performed by a manager.
-        For non-employee users: can be performed by the user themselves or an admin.
         User must change the password on next login.
       parameters:
         - name: UserId
@@ -950,7 +946,7 @@ paths:
       summary: Get current and upcoming reservations for a User
       description: |
         Retrieves all reservations assigned to a specific User that are currently active
-        or scheduled for the future. Useful for daily or weekly scheduling.
+        or scheduled for the future.
       parameters:
         - name: UserId
           in: path
@@ -1178,8 +1174,8 @@ paths:
       tags: [Place]
       summary: List all places for a specific business
       description: |
-        Retrieves all places (e.g., tables, rooms, or sections)
-        that belong to the specified business (restaurant).
+        Retrieves all places
+        that belong to the specified business.
       parameters:
         - name: businessId
           in: path
@@ -1205,7 +1201,7 @@ paths:
       summary: Create a new place for a specific business
       description: |
         Creates a new place (such as a table or room)
-        under the specified business (restaurant).
+        under the specified business.
       parameters:
         - name: businessId
           in: path
@@ -1403,7 +1399,7 @@ components:
           properties:
             group:
               type: string
-              description: Name of the variation group (e.g., "Size", "Color")
+              description: Name of the variation group (e.g., "Milk type", "Coffee beans")
             variations:
               type: array
               items:
@@ -1411,7 +1407,7 @@ components:
                 properties:
                   option:
                     type: string
-                    description: Variation option name (e.g., "Small", "Red")
+                    description: Variation option name (e.g., "Almond", "Coconut")
                   priceModifier:
                     type: number
                     format: decimal
