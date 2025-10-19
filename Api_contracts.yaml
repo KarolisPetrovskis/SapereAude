@@ -1299,21 +1299,21 @@ components:
         id:
           type: string
           format: uuid
-        option:
+        name:
           type: string
         priceModifier:
           type: number
           format: decimal
-      required: [id, priceModifier, option]
+      required: [id, priceModifier, name]
 
     ProductVariationCreate:
       type: object
       properties:
-        option:
+        name:
           type: string
         priceModifier:
           type: number
-      required: [priceModifier, option]
+      required: [priceModifier, name]
 
     # Orders & items & payments
     Order:
@@ -1805,7 +1805,7 @@ components:
         businessId:
           type: string
           format: uuid
-        productOrOrderId:
+        productId:
           type: string
           format: uuid
           nullable: true
@@ -1913,17 +1913,21 @@ components:
         id:
           type: string
           format: uuid
+        name:
+          type: string
         placeNumber:
           type: integer
-        type:
+        placeType:
           $ref: '#/components/schemas/PlaceType'
-      required: [id, placeNumber, type]
+      required: [id, placeNumber, placeType]
 
     PlaceCreate:
       type: object
       properties:
         name:
           type: string
+        placeNumber:
+          type: integer
         placeType:
           $ref: '#/components/schemas/PlaceType'
       required: [name, placeType]
@@ -1933,6 +1937,8 @@ components:
       properties:
         name:
           type: string
+        placeNumber:
+          type: integer
         placeType:
           $ref: '#/components/schemas/PlaceType'
 
