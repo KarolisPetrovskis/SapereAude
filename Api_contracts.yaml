@@ -5,7 +5,12 @@ info:
   version: 1.0.1
 servers:
   - url: https://api.example.com/v1
+
+security:
+  - bearerAuth: []
 tags:
+  - name: Auth
+    description: Authentication operations
   - name: Product
     description: Product, ProductVariation, ProductGroup operations
   - name: Order
@@ -20,6 +25,81 @@ tags:
     description: Tax rate operations
 
 paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+              required: [email, password]
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT Bearer token
+                  user:
+                    $ref: '#/components/schemas/GetUsers'
+                  firstLogin:
+                    type: boolean
+                    description: Indicates if this is the user's first login
+        '401':
+          description: Invalid credentials
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+              required: [refreshToken]
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Invalid refresh token
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: User logout
+      responses:
+        '204':
+          description: Logged out successfully
+
   /products:
     get:
       tags: [Product]
@@ -48,7 +128,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Product'
+                  $ref: '#/components/schemas/ProductWithVariations'
         '500':
           $ref: '#/components/responses/InternalError'
     post:
@@ -83,7 +163,7 @@ paths:
 
     get:
       tags: [Product]
-      summary: Get product by id (with variations)
+      summary: Get product by id with all variation details
       responses:
         '200':
           description: OK
@@ -102,7 +182,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductUpdate'
+              $ref: '#/components/schemas/ProductCreate'
       responses:
         '200':
           description: Product updated successfully with variations
@@ -112,98 +192,42 @@ paths:
                 $ref: '#/components/schemas/ProductWithVariations'
         '404':
           description: Product not found
-        '400':
-          description: Invalid input for product or var
 
-    delete:
-      tags: [Product]
-      summary: Delete product
-      responses:
-        '204':
-          description: Deleted
-        '404':
-          description: Product not found
-
-  /productVariations:
-    get:
-      tags: [Product]
-      summary: List product variations
-      parameters:
-        - name: productId
-          in: query
-          schema:
-            type: string
-            format: uuid
-        - name: productVariationGroupId
-          in: query
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductVariation'
-    post:
-      tags: [Product]
-      summary: Create product variation
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductVariationCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductVariation'
-
-  /productVariations/{variationId}:
+  /products/{productId}/status:
     parameters:
-      - name: variationId
+      - name: productId
         in: path
         required: true
         schema:
           type: string
           format: uuid
-    get:
-      tags: [Product]
-      summary: Get product variation by id
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductVariation'
-        '404':
-          description: Not found
     put:
       tags: [Product]
-      summary: Update product variation
+      summary: Change product status
+      description: Change product status between Available, Unavailable, and Removed
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductVariationCreate'
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/ProductStatus'
+              required: [status]
       responses:
         '200':
-          description: Updated
+          description: Status updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductVariation'
+                $ref: '#/components/schemas/ProductWithVariations'
+        '404':
+          description: Product not found
 
   /orders:
     post:
+      tags: [Order]
       summary: Create a new order
       operationId: createOrder
       requestBody:
@@ -221,6 +245,7 @@ paths:
                 $ref: '#/components/schemas/OrderResponse'
 
     get:
+      tags: [Order]
       summary: Get all orders
       operationId: listOrders
       responses:
@@ -235,6 +260,7 @@ paths:
 
   /orders/{orderId}:
     get:
+      tags: [Order]
       summary: Get order by ID
       operationId: getOrderById
       parameters:
@@ -253,6 +279,7 @@ paths:
                 $ref: '#/components/schemas/OrderResponse'
 
     put:
+      tags: [Order]
       summary: Update order status or request
       operationId: updateOrder
       parameters:
@@ -297,6 +324,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/OrderItem'
     post:
+      tags: [Order]
       summary: Add item to order
       operationId: addOrderItem
       parameters:
@@ -322,6 +350,7 @@ paths:
 
   /orders/{orderId}/items/{itemId}:
     delete:
+      tags: [Order]
       summary: Remove an item from order
       operationId: removeOrderItem
       parameters:
@@ -414,6 +443,7 @@ paths:
     post:
       tags: [Business]
       summary: Create a User under a business
+      description: Creates a new user with auto-generated one-time password
       requestBody:
         required: true
         content:
@@ -426,18 +456,94 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/GetUsers'
+                  temporaryPassword:
+                    type: string
+                    description: One-time password that must be changed on first login
+
+  /businesses/{businessId}/Users/{UserId}:
+    parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: UserId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Business]
+      summary: Get user details
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUsers'
+        '404':
+          description: User not found
+
+    put:
+      tags: [Business]
+      summary: Update user details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUsers'
+        '404':
+          description: User not found
 
   /reservations:
     get:
       tags: [Reservation]
-      summary: List reservations belonging to a specific bussiness
+      summary: List reservations for a business
       parameters:
         - name: businessId
           in: query
+          required: true
           schema:
             type: string
             format: uuid
+          description: ID of the business to retrieve reservations for
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional filter to show only reservations by a specific customer
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional start date to filter reservations
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional end date to filter reservations
       responses:
         '200':
           description: OK
@@ -446,7 +552,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Reservation'
+                  $ref: '#/components/schemas/ReservationDetail'
+        '404':
+          description: No reservations found
     post:
       tags: [Reservation]
       summary: Create reservation
@@ -505,6 +613,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/Discount'
 
+  /discounts/{discountId}:
+    parameters:
+      - name: discountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Discount]
+      summary: Get discount by ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Discount'
+        '404':
+          description: Discount not found
+
+    put:
+      tags: [Discount]
+      summary: Update discount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscountCreate'
+      responses:
+        '200':
+          description: Discount updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Discount'
+        '404':
+          description: Discount not found
+
+    delete:
+      tags: [Discount]
+      summary: Delete discount
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Discount not found
+
   /taxRates:
     get:
       tags: [Tax]
@@ -559,38 +717,6 @@ paths:
                 $ref: '#/components/schemas/OrderFullDetail'
         '404':
           description: Order not found
-
-  /reservations/all:
-    get:
-      tags: [Reservation]
-      summary: List of all reservations in system
-      parameters:
-        - name: businessId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID of the business to retrieve reservations for
-        - name: phoneNumber
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
-          description: Optional filter to show only reservations by a specific customer
-      responses:
-        '200':
-          description: List of reservations for the given business
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReservationDetail'
-        '404':
-          description: No reservations found for the specified business
-
   /reservations/by-period:
     get:
       tags: [Reservation]
@@ -682,9 +808,7 @@ paths:
       tags: [Tax]
       summary: Get tax rate for a specific product
       description: |
-        Returns the applicable tax rate for a product. 
-        The tax rate may be determined by the product's assigned tax type, 
-        product group, or business tax configuration.
+        Returns the applicable tax rate for a product.
       parameters:
         - name: productId
           in: path
@@ -709,7 +833,6 @@ paths:
       summary: Get all orders created or handled by a specific User
       description: |
         Retrieves a list of all orders associated with a given User.
-        Useful for tracking User performance, activity, or daily workload.
       parameters:
         - name: UserId
           in: path
@@ -788,10 +911,11 @@ paths:
   /Users/{UserId}/password:
     put:
       tags: [User]
-      summary: Change a User's password
+      summary: Reset user password (auto-generates new password)
       description: |
-        Allows a User or administrator to change the User's account password.
-        If performed by the User themselves, oldPassword is required.
+        Generates a new one-time password for the user. 
+        For employee users: can only be performed by a manager.
+        User must change the password on next login.
       parameters:
         - name: UserId
           in: path
@@ -799,31 +923,20 @@ paths:
           schema:
             type: string
             format: uuid
-          description: ID of the User whose password is being changed
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                oldPassword:
-                  type: string
-                  description: The current password (required if self-service)
-                newPassword:
-                  type: string
-                  minLength: 8
-                  description: The new password
-              required: [newPassword]
+          description: ID of the User whose password is being reset
       responses:
         '200':
-          description: Password changed successfully
-        '400':
-          description: Invalid request or password format
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temporaryPassword:
+                    type: string
+                    description: New one-time password
         '404':
           description: User not found
-        '401':
-          description: Incorrect old password
 
   /Users/{UserId}/reservations/current:
     get:
@@ -831,7 +944,7 @@ paths:
       summary: Get current and upcoming reservations for a User
       description: |
         Retrieves all reservations assigned to a specific User that are currently active
-        or scheduled for the future. Useful for daily or weekly scheduling.
+        or scheduled for the future.
       parameters:
         - name: UserId
           in: path
@@ -948,6 +1061,26 @@ paths:
         '400':
           description: Invalid input
 
+  /productVariationGroups/{groupId}:
+    delete:
+      tags: [ProductVariationGroup]
+      summary: Delete a product variation group
+      description: Deletes a product variation group. This will also remove all variations from this group.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Group deleted successfully
+        '404':
+          description: Group not found
+        '409':
+          description: Cannot delete group that is in use by products
+
   /productVariationGroups/{groupId}/variations:
     post:
       tags: [ProductVariationGroup]
@@ -998,9 +1131,9 @@ paths:
   /Users/{userId}/FirstLogIn/password:
     put:
       tags: [User]
-      summary: Change a user's password and mark first login as completed
+      summary: Change password on first login
       description: |
-        Allows a user or administrator to update the password. 
+        Allows a user to set their permanent password on first login using the temporary password.
         When successful, `firstLogin` is automatically set to `false`.
       parameters:
         - name: userId
@@ -1016,21 +1149,21 @@ paths:
             schema:
               type: object
               properties:
-                oldPassword:
+                temporaryPassword:
                   type: string
-                  description: The user's current password (required if self-service)
+                  description: The temporary password provided by the system
                 newPassword:
                   type: string
                   minLength: 8
-                  description: The new password
-              required: [newPassword]
+                  description: The new permanent password
+              required: [temporaryPassword, newPassword]
       responses:
         '200':
           description: Password updated successfully; firstLogin set to false
         '400':
           description: Invalid password format
         '401':
-          description: Incorrect old password
+          description: Incorrect temporary password
         '404':
           description: User not found
 
@@ -1039,8 +1172,8 @@ paths:
       tags: [Place]
       summary: List all places for a specific business
       description: |
-        Retrieves all places (e.g., tables, rooms, or sections)
-        that belong to the specified business (restaurant).
+        Retrieves all places
+        that belong to the specified business.
       parameters:
         - name: businessId
           in: path
@@ -1066,7 +1199,7 @@ paths:
       summary: Create a new place for a specific business
       description: |
         Creates a new place (such as a table or room)
-        under the specified business (restaurant).
+        under the specified business.
       parameters:
         - name: businessId
           in: path
@@ -1176,6 +1309,13 @@ paths:
           description: Place not found
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+
   responses:
     InternalError:
       description: Internal Server Error
@@ -1203,11 +1343,9 @@ components:
         description:
           type: string
           nullable: true
-        productVariationGroup:
-          type: array
-          items:
-            type: string
-            format: uuid
+        productVariationGroupId:
+          type: string
+          format: uuid
           nullable: true
         productStatus:
           $ref: '#/components/schemas/ProductStatus'
@@ -1215,6 +1353,25 @@ components:
           type: string
           format: uuid
       required: [id, businessId, price, name, tax, productStatus]
+
+    ProductWithVariations:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            variationGroup:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                group:
+                  type: string
+                variations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ProductVariation'
 
     ProductCreate:
       type: object
@@ -1230,82 +1387,32 @@ components:
         description:
           type: string
           nullable: true
-        productStatus:
-          $ref: '#/components/schemas/ProductStatus'
-          default: Available
         tax:
           type: string
           format: uuid
-        variationGroups:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariationGroupCreate'
+        variationGroup:
+          type: object
           nullable: true
+          description: Optional variation group with all variations to create
+          properties:
+            group:
+              type: string
+              description: Name of the variation group (e.g., "Milk type", "Coffee beans")
+            variations:
+              type: array
+              items:
+                type: object
+                properties:
+                  option:
+                    type: string
+                    description: Variation option name (e.g., "Almond", "Coconut")
+                  priceModifier:
+                    type: number
+                    format: decimal
+                    description: Price adjustment for this variation
+                required: [option, priceModifier]
+          required: [group, variations]
       required: [businessId, name, price, tax]
-
-    ProductVariationGroupCreate:
-      type: object
-      properties:
-        group:
-          type: string
-        variations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariationCreate'
-      required: [group, variations]
-
-    ProductUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        price:
-          type: number
-          format: decimal
-        description:
-          type: string
-          nullable: true
-        tax:
-          type: string
-          format: uuid
-        productStatus:
-          $ref: '#/components/schemas/ProductStatus'
-        variationGroups:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariationGroupUpdate'
-          nullable: true
-
-    ProductVariationGroupUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          nullable: true
-          description: 'Required for existing groups, null for new groups'
-        group:
-          type: string
-        variations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariationUpdate'
-      required: [group, variations]
-
-    ProductVariationUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          nullable: true
-          description: 'Required for existing variations, null for new variations'
-        option:
-          type: string
-        priceModifier:
-          type: number
-          format: decimal
-      required: [option, priceModifier]
 
     ProductVariationGroup:
       type: object
@@ -1334,16 +1441,6 @@ components:
           type: number
           format: decimal
       required: [id, priceModifier, option]
-
-    ProductVariationCreate:
-      type: object
-      properties:
-        option:
-          type: string
-        priceModifier:
-          type: number
-          format: decimal
-      required: [priceModifier, option]
 
     # Orders & items & payments
     Order:
@@ -1624,6 +1721,12 @@ components:
         id:
           type: string
           format: uuid
+        statistics:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
         name:
           type: string
         country:
@@ -1729,10 +1832,25 @@ components:
           type: integer
         salary:
           type: number
-        businessId:
+          format: decimal
+      required: [name, surname, permissionLevel, salary]
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
           type: string
-          format: uuid
-      required: [name, surname, businessId, permissionLevel, salary]
+        surname:
+          type: string
+        salary:
+          type: number
+          format: decimal
+          nullable: true
+        employmentStatus:
+          $ref: '#/components/schemas/UserStatus'
+        permissionLevel:
+          type: integer
+      description: Update user details. All fields are optional.
 
     # Reservations
     Reservation:
@@ -1940,20 +2058,20 @@ components:
         id:
           type: string
           format: uuid
-        placeNumber:
-          type: integer
+        placeName:
+          type: string
         type:
           $ref: '#/components/schemas/PlaceType'
-      required: [id, placeNumber, type]
+      required: [id, placeName, type]
 
     PlaceCreate:
       type: object
       properties:
-        name:
+        placeName:
           type: string
         placeType:
           $ref: '#/components/schemas/PlaceType'
-      required: [name, placeType]
+      required: [placeName, placeType]
 
     PlaceUpdate:
       type: object
@@ -2013,47 +2131,6 @@ components:
           format: decimal
       required:
         [id, businessId, UserId, dateTime, status, items, totalAfterDiscount]
-
-    ProductWithVariations:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        businessId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        basePrice:
-          type: number
-          format: decimal
-        tax:
-          type: string
-          format: uuid
-          nullable: true
-        maxServiceDuration:
-          type: number
-          nullable: true
-        productStatus:
-          $ref: '#/components/schemas/ProductStatus'
-        variationGroups:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariationGroupWithOptions'
-
-    ProductVariationGroupWithOptions:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        group:
-          type: string
-        variations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariation'
 
     ReservationDetail:
       type: object
