@@ -1,7 +1,7 @@
 openapi: 3.0.4
 info:
-  title: PoS Backend API
-  description: API contracts of PoS system.
+  title: Commerce Backend API (diagram-derived, updated)
+  description: API contract derived from the provided class diagram. Includes Product/ProductGroup/ProductVariation/ProductPrice, Orders, Reservations, Discounts, TaxRates, Businesses and Users.
   version: 1.0.1
 servers:
   - url: https://api.example.com/v1
@@ -10,10 +10,8 @@ tags:
     description: Product, ProductPrice, ProductVariation, ProductGroup operations
   - name: Order
     description: Orders, order items and payments
-  - name: Customer
-    description: Customer operations
   - name: Business
-    description: Business and Worker operations
+    description: Business and User operations
   - name: Reservation
     description: Reservation operations
   - name: Discount
@@ -172,36 +170,6 @@ paths:
         '404':
           description: Product not found
 
-  /productGroups:
-    get:
-      tags: [Product]
-      summary: List product groups
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductGroup'
-    post:
-      tags: [Product]
-      summary: Create product group
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductGroupCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductGroup'
-
   /productVariations:
     get:
       tags: [Product]
@@ -294,7 +262,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: workerId
+        - name: UserId
           in: query
           schema:
             type: string
@@ -434,45 +402,6 @@ paths:
         '400':
           description: Invalid input
 
-  /customers:
-    get:
-      tags: [Customer]
-      summary: List customers
-      parameters:
-        - name: email
-          in: query
-          schema:
-            type: string
-        - name: phoneNumber
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Customer'
-    post:
-      tags: [Customer]
-      summary: Create customer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CustomerCreate'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Customer'
-
   /businesses:
     get:
       tags: [Business]
@@ -503,7 +432,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Business'
 
-  /businesses/{businessId}/workers:
+  /businesses/{businessId}/Users:
     parameters:
       - name: businessId
         in: path
@@ -513,7 +442,7 @@ paths:
           format: uuid
     get:
       tags: [Business]
-      summary: List workers for a business
+      summary: List Users for a business
       responses:
         '200':
           description: OK
@@ -522,23 +451,23 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Worker'
+                  $ref: '#/components/schemas/User'
     post:
       tags: [Business]
-      summary: Create a worker under a business
+      summary: Create a User under a business
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WorkerCreate'
+              $ref: '#/components/schemas/UserCreate'
       responses:
         '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Worker'
+                $ref: '#/components/schemas/User'
 
   /reservations:
     get:
@@ -782,12 +711,12 @@ paths:
         '404':
           description: Product not found or no price history available
 
-  /businesses/{businessId}/workers/{workerId}/salary:
+  /businesses/{businessId}/Users/{UserId}/salary:
     put:
-      tags: [Worker]
-      summary: Update worker salary
+      tags: [User]
+      summary: Update User salary
       description: >
-        Updates the salary of a specific worker under the given business.
+        Updates the salary of a specific User under the given business.
         Only authorized users (e.g., business managers) should be able to perform this operation.
       parameters:
         - name: businessId
@@ -796,14 +725,14 @@ paths:
           schema:
             type: string
             format: uuid
-          description: ID of the business the worker belongs to
-        - name: workerId
+          description: ID of the business the User belongs to
+        - name: UserId
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the worker whose salary will be updated
+          description: ID of the User whose salary will be updated
       requestBody:
         required: true
         content:
@@ -822,11 +751,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Worker'
+                $ref: '#/components/schemas/User'
         '400':
           description: Invalid salary input
         '404':
-          description: Business or worker not found
+          description: Business or User not found
 
   /products/{productId}/tax:
     get:
@@ -854,21 +783,21 @@ paths:
         '404':
           description: Product or tax rate not found
 
-  /workers/{workerId}/orders:
+  /Users/{UserId}/orders:
     get:
       tags: [Order]
-      summary: Get all orders created or handled by a specific worker
+      summary: Get all orders created or handled by a specific User
       description: |
-        Retrieves a list of all orders associated with a given worker.
-        Useful for tracking worker performance, activity, or daily workload.
+        Retrieves a list of all orders associated with a given User.
+        Useful for tracking User performance, activity, or daily workload.
       parameters:
-        - name: workerId
+        - name: UserId
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the worker whose orders to retrieve
+          description: ID of the User whose orders to retrieve
         - name: status
           in: query
           required: false
@@ -891,7 +820,7 @@ paths:
           description: Optional end date to filter orders
       responses:
         '200':
-          description: List of orders handled by the worker
+          description: List of orders handled by the User
           content:
             application/json:
               schema:
@@ -899,23 +828,23 @@ paths:
                 items:
                   $ref: '#/components/schemas/Order'
         '404':
-          description: Worker not found or no orders available
+          description: User not found or no orders available
 
-  /workers/{workerId}/permission:
+  /Users/{UserId}/permission:
     put:
-      tags: [Worker]
-      summary: Update a worker's permission level
+      tags: [User]
+      summary: Update a User's permission level
       description: |
-        Updates the access or permission level of a specific worker.
-        This can be used by business administrators to promote or restrict worker privileges.
+        Updates the access or permission level of a specific User.
+        This can be used by business administrators to promote or restrict User privileges.
       parameters:
-        - name: workerId
+        - name: UserId
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the worker whose permission level will be updated
+          description: ID of the User whose permission level will be updated
       requestBody:
         required: true
         content:
@@ -934,23 +863,23 @@ paths:
         '400':
           description: Invalid permission level
         '404':
-          description: Worker not found
+          description: User not found
 
-  /workers/{workerId}/password:
+  /Users/{UserId}/password:
     put:
-      tags: [Worker]
-      summary: Change a worker's password
+      tags: [User]
+      summary: Change a User's password
       description: |
-        Allows a worker or administrator to change the worker's account password.
-        If performed by the worker themselves, oldPassword is required.
+        Allows a User or administrator to change the User's account password.
+        If performed by the User themselves, oldPassword is required.
       parameters:
-        - name: workerId
+        - name: UserId
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the worker whose password is being changed
+          description: ID of the User whose password is being changed
       requestBody:
         required: true
         content:
@@ -972,25 +901,25 @@ paths:
         '400':
           description: Invalid request or password format
         '404':
-          description: Worker not found
+          description: User not found
         '401':
           description: Incorrect old password
 
-  /workers/{workerId}/reservations/current:
+  /Users/{UserId}/reservations/current:
     get:
       tags: [Reservation]
-      summary: Get current and upcoming reservations for a worker
+      summary: Get current and upcoming reservations for a User
       description: |
-        Retrieves all reservations assigned to a specific worker that are currently active
+        Retrieves all reservations assigned to a specific User that are currently active
         or scheduled for the future. Useful for daily or weekly scheduling.
       parameters:
-        - name: workerId
+        - name: UserId
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the worker whose reservations to retrieve
+          description: ID of the User whose reservations to retrieve
         - name: fromDate
           in: query
           required: false
@@ -1007,7 +936,7 @@ paths:
           description: Optional end of the period
       responses:
         '200':
-          description: List of current and upcoming reservations for the worker
+          description: List of current and upcoming reservations for the User
           content:
             application/json:
               schema:
@@ -1015,7 +944,430 @@ paths:
                 items:
                   $ref: '#/components/schemas/Reservation'
         '404':
-          description: Worker not found or no reservations available
+          description: User not found or no reservations available
+
+  /taxRates/{taxRateId}:
+    put:
+      tags: [TaxRate]
+      summary: Update an existing tax rate
+      description: |
+        Updates the details of a tax rate, such as its percentage or description.
+        Used by business administrators when tax regulations or pricing rules change.
+      parameters:
+        - name: taxRateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The ID of the tax rate to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the tax rate
+                percentage:
+                  type: number
+                  format: decimal
+                  description: The new percentage rate
+                description:
+                  type: string
+                  nullable: true
+                businessId:
+                  type: string
+                  format: uuid
+              required: [percentage]
+      responses:
+        '200':
+          description: Tax rate updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+        '400':
+          description: Invalid request body
+        '404':
+          description: Tax rate not found
+
+  /productVariationGroups:
+    post:
+      tags: [ProductVariationGroup]
+      summary: Create a new product variation group
+      description: Creates a group to organize related product variations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+                businessId:
+                  type: string
+                  format: uuid
+              required: [name, businessId]
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariationGroup'
+        '400':
+          description: Invalid input
+
+  /productVariationGroups/{groupId}/variations:
+    post:
+      tags: [ProductVariationGroup]
+      summary: Add a product variation to a group
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                variationId:
+                  type: string
+                  format: uuid
+                additionalCost:
+                  type: number
+                  format: decimal
+                  nullable: true
+              required: [variationId]
+      responses:
+        '200':
+          description: Variation added successfully
+        '404':
+          description: Group or variation not found
+
+  /productVariationGroups/{groupId}/variations/{variationId}:
+    delete:
+      tags: [ProductVariationGroup]
+      summary: Remove a product variation from a group
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: variationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Variation removed successfully
+        '404':
+          description: Group or variation not found
+
+  /productVariationGroups/{groupId}/cost:
+    put:
+      tags: [ProductVariationGroup]
+      summary: Update costs for variations in a group
+      description: Bulk update of cost adjustments for product variations within the group.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  variationId:
+                    type: string
+                    format: uuid
+                  additionalCost:
+                    type: number
+                    format: decimal
+                required: [variationId, additionalCost]
+      responses:
+        '200':
+          description: Costs updated successfully
+        '404':
+          description: Group or variations not found
+
+  /users/{userId}/password:
+    put:
+      tags: [User]
+      summary: Change a user's password and mark first login as completed
+      description: |
+        Allows a user or administrator to update the password. 
+        When successful, `firstLogin` is automatically set to `false`.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  description: The user's current password (required if self-service)
+                newPassword:
+                  type: string
+                  minLength: 8
+                  description: The new password
+              required: [newPassword]
+      responses:
+        '200':
+          description: Password updated successfully; firstLogin set to false
+        '400':
+          description: Invalid password format
+        '401':
+          description: Incorrect old password
+        '404':
+          description: User not found
+
+  /businesses/{businessId}/places:
+    get:
+      tags: [Place]
+      summary: List all places for a specific business
+      description: |
+        Retrieves all places (e.g., tables, rooms, or sections)
+        that belong to the specified business (restaurant).
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The ID of the business whose places to list
+      responses:
+        '200':
+          description: List of places for the business
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
+        '404':
+          description: Business not found
+
+    post:
+      tags: [Place]
+      summary: Create a new place for a specific business
+      description: |
+        Creates a new place (such as a table or room)
+        under the specified business (restaurant).
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The business ID this place will belong to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceCreate'
+      responses:
+        '201':
+          description: Place created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '400':
+          description: Invalid input
+        '404':
+          description: Business not found
+
+  /businesses/{businessId}/places/{placeId}:
+    parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: placeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Place]
+      summary: Get details of a place in a specific business
+      responses:
+        '200':
+          description: Place found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '404':
+          description: Place not found
+
+    put:
+      tags: [Place]
+      summary: Update a place in a business
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceUpdate'
+      responses:
+        '200':
+          description: Place updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '400':
+          description: Invalid input
+        '404':
+          description: Place not found
+
+    delete:
+      tags: [Place]
+      summary: Delete a place from a business
+      responses:
+        '204':
+          description: Place deleted successfully
+        '404':
+          description: Place not found
+
+  /places/{placeId}/reservations:
+    get:
+      tags: [Reservation]
+      summary: Get all reservations for a specific place
+      description: Retrieves all reservations associated with the given place.
+      parameters:
+        - name: placeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of reservations for the place
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+        '404':
+          description: Place not found
+
+
+  /statistics/{businessId}/overview:
+    get:
+      tags: [Statistics]
+      summary: Get overall business statistics
+      description: |
+        Returns aggregated statistics including total revenue, total reservations,
+        total discounts applied, and worker performance summaries.
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Aggregated business statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsOverview'
+        '404':
+          description: Business not found
+
+  /statistics/{businessId}/history:
+    get:
+      tags: [Statistics]
+      summary: Get detailed order and reservation history
+      description: |
+        Returns detailed historical data of orders and reservations for the business,
+        including revenue trends and busiest periods.
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Historical data returned successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StatisticsRecord'
+        '404':
+          description: No data found
+
+
 
 components:
   responses:
@@ -1045,10 +1397,19 @@ components:
         maxServiceDuration:
           type: number
           format: float
-        productGroupId:
+          nullable: true
+        productVariationGroup:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        productStatus:
+          $ref: '#/components/schemas/ProductStatus'
+        tax:
           type: string
           format: uuid
-      required: [id, businessId, name]
+      required: [id, businessId, productPriceId, name, tax, productStatus]
 
     ProductCreate:
       type: object
@@ -1058,12 +1419,23 @@ components:
           format: uuid
         name:
           type: string
-        productGroupId:
+        productPriceId:
           type: string
           format: uuid
+        productVariationGroup:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
         maxServiceDuration:
           type: number
-      required: [businessId, productGroupId, name]
+        productStatus:
+          $ref: '#/components/schemas/ProductStatus'
+        tax:
+          type: string
+          format: uuid
+      required: [businessId, name, productPriceId, productStatus, tax]
 
     ProductUpdate:
       type: object
@@ -1075,9 +1447,14 @@ components:
           format: uuid
         maxServiceDuration:
           type: number
-        productGroupId:
-          type: string
-          format: uuid
+        productVariationGroup:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        productStatus:
+          $ref: '#/components/schemas/ProductStatus'
 
     ProductPrice:
       type: object
@@ -1123,26 +1500,20 @@ components:
           format: decimal
       required: [productId, basePrice, effectiveFrom]
 
-    ProductGroup:
+    ProductVariationGroup:
       type: object
       properties:
         id:
           type: string
           format: uuid
-        name:
+        productVariationId:
+          type: array
+          items:
+            type: string
+            format: uuid
+        group:
           type: string
-        description:
-          type: string
-
-    ProductGroupCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-      required: [name]
+      required: [id, productVariationId, group]
 
     ProductVariation:
       type: object
@@ -1150,38 +1521,21 @@ components:
         id:
           type: string
           format: uuid
-        productId:
-          type: string
-          format: uuid
-          description: Link to Product
-        group:
-          type: string
-        productGroupId:
-          type: string
-          format: uuid
         option:
           type: string
         priceModifier:
           type: number
           format: decimal
-      required: [id, productId, group, productGroupId, priceModifier, option]
+      required: [id, priceModifier, option]
 
     ProductVariationCreate:
       type: object
       properties:
-        productId:
-          type: string
-          format: uuid
-        productGroupId:
-          type: string
-          format: uuid
-        group:
-          type: string
         option:
           type: string
         priceModifier:
           type: number
-      required: [productId, productGroupId, group, priceModifier, option]
+      required: [priceModifier, option]
 
     # Orders & items & payments
     Order:
@@ -1190,12 +1544,26 @@ components:
         id:
           type: string
           format: uuid
-        workerId:
+        UserId:
           type: string
           format: uuid
+        orderItemId:
+          type: array
+          items:
+            type: string
+            format: uuid
         businessId:
           type: string
           format: uuid
+        discountId:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        price:
+          type: number
+          format: decimal
         dateTime:
           type: string
           format: date-time
@@ -1205,23 +1573,12 @@ components:
         specialRequest:
           type: string
           nullable: true
-        discountIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
-        orderItemIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-      required: [id, workerId, businessId, dateTime, status, orderItemIds]
+      required: [id, UserId, businessId, dateTime, status, orderItemId, price]
 
     OrderCreate:
       type: object
       properties:
-        workerId:
+        UserId:
           type: string
           format: uuid
         businessId:
@@ -1236,11 +1593,14 @@ components:
         specialRequest:
           type: string
           nullable: true
+        price:
+          type: number
+          format: decimal
         items:
           type: array
           items:
             $ref: '#/components/schemas/OrderItemCreate'
-      required: [workerId, businessId, dateTime, items]
+      required: [UserId, businessId, dateTime, items, price]
 
     OrderUpdate:
       type: object
@@ -1249,9 +1609,13 @@ components:
           $ref: '#/components/schemas/OrderStatus'
         specialRequest:
           type: string
-        workerId:
-          type: string
-          format: uuid
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemCreate'
+        price:
+          type: number
+          format: decimal
 
     OrderItem:
       type: object
@@ -1262,7 +1626,6 @@ components:
         orderId:
           type: string
           format: uuid
-          description: Link to Order (diagram relationship)
         productId:
           type: string
           format: uuid
@@ -1272,17 +1635,20 @@ components:
           nullable: true
         amount:
           type: integer
+        price:
+          type: number
+          format: decimal
         isAltered:
           type: array
           items:
             type: boolean
-        productVariationIds:
+        productVariationGroup:
           type: array
           items:
             type: string
             format: uuid
           nullable: true
-      required: [id, orderId, productId, amount, isAltered]
+      required: [id, orderId, productId, amount, price, isAltered]
 
     OrderItemCreate:
       type: object
@@ -1290,6 +1656,9 @@ components:
         productId:
           type: string
           format: uuid
+        orderId:
+          type: string
+          format: uuid
         amount:
           type: integer
         discountId:
@@ -1300,12 +1669,13 @@ components:
           type: array
           items:
             type: boolean
-        productVariationIds:
+        productVariationGroup:
           type: array
           items:
             type: string
             format: uuid
-      required: [productId, amount, isAltered]
+          nullable: true
+      required: [orderId, productId, amount, isAltered]
 
     OrderPayment:
       type: object
@@ -1321,7 +1691,7 @@ components:
           items:
             type: string
             format: uuid
-        amount:
+        paymentSum:
           type: number
           format: decimal
         paymentType:
@@ -1333,7 +1703,8 @@ components:
         tip:
           type: number
           format: decimal
-      required: [id, orderId, amount, paymentType, dateTime, tip, products]
+          nullable: true
+      required: [id, orderId, paymentSum, paymentType, dateTime, products]
 
     OrderPaymentCreate:
       type: object
@@ -1346,7 +1717,7 @@ components:
           items:
             type: string
             format: uuid
-        amount:
+        paymentSum:
           type: number
           format: decimal
         paymentType:
@@ -1354,45 +1725,8 @@ components:
         tip:
           type: number
           format: decimal
-      required: [orderId, amount, paymentType, products]
-
-    # Customers, Businesses, Workers
-    Customer:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        middleName:
-          type: string
           nullable: true
-        surname:
-          type: string
-        email:
-          type: string
-          format: email
-          nullable: true
-        phoneNumber:
-          type: string
-          nullable: true
-      required: [id, name, surname]
-
-    CustomerCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        middleName:
-          type: string
-        surname:
-          type: string
-        email:
-          type: string
-        phoneNumber:
-          type: string
-      required: [name]
+      required: [orderId, paymentSum, paymentType, products]
 
     Business:
       type: object
@@ -1400,6 +1734,12 @@ components:
         id:
           type: string
           format: uuid
+        statistics:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
         name:
           type: string
         country:
@@ -1431,34 +1771,46 @@ components:
           type: string
       required: [name, country, address, owner, email, phoneNumber]
 
-    Worker:
+    User:
       type: object
       properties:
         id:
           type: string
           format: uuid
+        businessId:
+          type: string
+          format: uuid
         name:
           type: string
         surname:
           type: string
-        permissionLevel:
-          type: integer
-        businessId:
-          type: string
-          format: uuid
         salary:
           type: number
+          format: decimal
           nullable: true
+        employmentStatus:
+          $ref: '#/components/schemas/UserStatus'
+        permissionLevel:
+          type: integer
         password:
           type: string
           format: password
           description: encrypted password
-        WorkerStatus:
-          $ref: '#/components/schemas/WorkerStatus'
+        firstLogin:
+          type: boolean
       required:
-        [id, name, surname, permissionLevel, businessId, WorkerStatus, password]
+        [
+          id,
+          name,
+          surname,
+          permissionLevel,
+          businessId,
+          employmentStatus,
+          password,
+          firstLogin,
+        ]
 
-    WorkerCreate:
+    UserCreate:
       type: object
       properties:
         name:
@@ -1472,7 +1824,10 @@ components:
         password:
           type: string
           format: password
-      required: [name, surname, permissionLevel, password]
+        businessId:
+          type: string
+          format: uuid
+      required: [name, surname, businessId, permissionLevel, password, salary]
 
     # Reservations
     Reservation:
@@ -1481,19 +1836,31 @@ components:
         id:
           type: string
           format: uuid
-        customerId:
+        userId:
           type: string
           format: uuid
-          description: Link to Customer
+          nullable: true
         businessId:
           type: string
           format: uuid
-          description: Link to Business
         productIds:
           type: array
           items:
             type: string
             format: uuid
+          nullable: true
+        placeIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        name:
+          type: string
+        phoneNumber:
+          type: string
+        numberOfPeople:
+          type: integer
           nullable: true
         startTime:
           type: string
@@ -1503,21 +1870,18 @@ components:
           type: string
           format: date-time
           description: epoch
-        WorkerId:
-          type: string
-          format: uuid
-          nullable: true
         request:
           type: string
           nullable: true
-      required: [id, customerId, businessId, startTime, endTime]
+      required: [id, userId, businessId, name, phoneNumber, startTime, endTime]
 
     ReservationCreate:
       type: object
       properties:
-        customerId:
+        userId:
           type: string
           format: uuid
+          nullable: true
         businessId:
           type: string
           format: uuid
@@ -1526,18 +1890,32 @@ components:
           items:
             type: string
             format: uuid
-        startTime:
-          type: integer
-          format: int64
-        endTime:
-          type: integer
-          format: int64
-        customerWorkerId:
+          nullable: true
+        reservationPlace:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        name:
           type: string
-          format: uuid
+        phoneNumber:
+          type: string
+        numberOfPeople:
+          type: integer
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          description: epoch
+        endTime:
+          type: string
+          format: date-time
+          description: epoch
         request:
           type: string
-      required: [customerId, businessId, startTime, endTime]
+          nullable: true
+      required: [userId, businessId, name, phoneNumber, startTime, endTime]
 
     # Discounts
     Discount:
@@ -1549,7 +1927,7 @@ components:
         businessId:
           type: string
           format: uuid
-        productId:
+        productOrOrderId:
           type: string
           format: uuid
           nullable: true
@@ -1612,9 +1990,6 @@ components:
         id:
           type: string
           format: uuid
-        productGroupId:
-          type: string
-          format: uuid
         value:
           type: number
           format: decimal
@@ -1632,14 +2007,11 @@ components:
         region:
           type: string
           nullable: true
-      required: [id, productGroupId, value, effectiveFrom, country]
+      required: [id, value, effectiveFrom, country]
 
     TaxRateCreate:
       type: object
       properties:
-        productGroupId:
-          type: string
-          format: uuid
         businessId:
           type: string
           format: uuid
@@ -1658,7 +2030,124 @@ components:
           type: string
         region:
           type: string
-      required: [productGroupId, businessId, value, effectiveFrom, country]
+      required: [businessId, value, effectiveFrom, country]
+
+    Place:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        placeNumber:
+          type: integer
+        type:
+          $ref: '#/components/schemas/PlaceType'
+      required: [id, placeNumber, type]
+
+    PlaceCreate:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+        isActive:
+          type: boolean
+      required: [businessId, name, capacity]
+
+    PlaceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+        isActive:
+          type: boolean
+
+
+    StatisticsAndHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orders:
+          type: array
+          items:
+            type: string
+            format: uuid
+        orderItems:
+          type: array
+          items:
+            type: string
+            format: uuid
+        orderPayment:
+          type: array
+          items:
+            type: string
+            format: uuid
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        productPrices:
+          type: array
+          items:
+            type: string
+            format: uuid
+        productVariations:
+          type: array
+          items:
+            type: string
+            format: uuid
+        discounts:
+          type: array
+          items:
+            type: string
+            format: uuid
+        reservations:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tax:
+          type: array
+          items:
+            type: string
+            format: uuid
+        date:
+          type: string
+          format: date-time
+          description: epoch
+        income:
+          type: number
+          format: decimal
+      required:
+        [
+          id,
+          orders,
+          orderItems,
+          orderPayment,
+          products,
+          productPrices,
+          productVariations,
+          discounts,
+          reservations,
+          tax,
+          date,
+          income,
+        ]
 
     OrderFullDetail:
       type: object
@@ -1669,7 +2158,7 @@ components:
         businessId:
           type: string
           format: uuid
-        workerId:
+        UserId:
           type: string
           format: uuid
         dateTime:
@@ -1708,7 +2197,7 @@ components:
           type: number
           format: decimal
       required:
-        [id, businessId, workerId, dateTime, status, items, totalAfterDiscount]
+        [id, businessId, UserId, dateTime, status, items, totalAfterDiscount]
 
     ReservationDetail:
       type: object
@@ -1719,11 +2208,14 @@ components:
         businessId:
           type: string
           format: uuid
-        customerId:
+        name:
+          type: string
+        phoneNumber:
+          type: string
+        userId:
           type: string
           format: uuid
-        customer:
-          $ref: '#/components/schemas/Customer'
+          nullable: true
         business:
           $ref: '#/components/schemas/Business'
         reservationDate:
@@ -1731,10 +2223,56 @@ components:
           format: date-time
         #status:
         #  $ref: '#/components/schemas/ReservationStatus'
-        notes:
+        request:
           type: string
           nullable: true
-      required: [id, businessId, customerId, reservationDate, status]
+      required: [id, businessId, name, phoneNumber, reservationDate]
+
+    StatisticsOverview:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        totalRevenue:
+          type: number
+          format: decimal
+        totalOrders:
+          type: integer
+        totalReservations:
+          type: integer
+        averageOrderValue:
+          type: number
+          format: decimal
+        topWorker:
+          type: string
+          description: Worker with highest sales or performance
+        topProduct:
+          type: string
+          description: Most frequently ordered product
+        generatedAt:
+          type: string
+          format: date-time
+      required: [businessId, totalRevenue, totalOrders, totalReservations, generatedAt]
+
+    StatisticsRecord:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        revenue:
+          type: number
+          format: decimal
+        orderCount:
+          type: integer
+        reservationCount:
+          type: integer
+        averageOrderValue:
+          type: number
+          format: decimal
+      required: [date, revenue, orderCount]
+
 
     # Enums & common
     PaymentType:
@@ -1744,9 +2282,17 @@ components:
       type: string
       enum: [InProgress, Canceled, Paid, Refunded]
 
-    WorkerStatus:
+    UserStatus:
       type: string
       enum: [active, terminate]
+
+    ProductStatus:
+      type: string
+      enum: [Available, Unavailable, Removed]
+
+    PlaceType:
+      type: string
+      enum: [Table, Seat, Room]
 
     Error:
       type: object
