@@ -976,16 +976,8 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                variationId:
-                  type: string
-                  format: uuid
-                additionalCost:
-                  type: number
-                  format: decimal
-                  nullable: true
-              required: [variationId]
+              $ref: '#/components/schemas/ProductVariation'
+
       responses:
         '200':
           description: Variation added successfully
