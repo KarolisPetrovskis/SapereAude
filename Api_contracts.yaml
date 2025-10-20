@@ -29,7 +29,7 @@ paths:
     post:
       tags: [Auth]
       summary: User login
-      security: []  
+      security: []
       requestBody:
         required: true
         content:
@@ -224,7 +224,6 @@ paths:
                 $ref: '#/components/schemas/ProductWithVariations'
         '404':
           description: Product not found
-
 
   /orders:
     post:
@@ -465,7 +464,6 @@ paths:
                     type: string
                     description: One-time password that must be changed on first login
 
-
   /businesses/{businessId}/Users/{UserId}:
     parameters:
       - name: businessId
@@ -480,7 +478,7 @@ paths:
         schema:
           type: string
           format: uuid
-    
+
     get:
       tags: [Business]
       summary: Get user details
@@ -493,7 +491,7 @@ paths:
                 $ref: '#/components/schemas/GetUsers'
         '404':
           description: User not found
-    
+
     put:
       tags: [Business]
       summary: Update user details
@@ -525,7 +523,7 @@ paths:
             type: string
             format: uuid
           description: ID of the business to retrieve reservations for
-        - name: customerId
+        - name: phone
           in: query
           required: false
           schema:
@@ -623,7 +621,7 @@ paths:
         schema:
           type: string
           format: uuid
-    
+
     get:
       tags: [Discount]
       summary: Get discount by ID
@@ -636,7 +634,7 @@ paths:
                 $ref: '#/components/schemas/Discount'
         '404':
           description: Discount not found
-    
+
     put:
       tags: [Discount]
       summary: Update discount
@@ -655,7 +653,7 @@ paths:
                 $ref: '#/components/schemas/Discount'
         '404':
           description: Discount not found
-    
+
     delete:
       tags: [Discount]
       summary: Delete discount
@@ -684,7 +682,7 @@ paths:
                 $ref: '#/components/schemas/TaxRate'
     post:
       tags: [Tax]
-      summary: Create tax rate (business-scoped)
+      summary: Create tax rate
       requestBody:
         required: true
         content:
@@ -810,7 +808,7 @@ paths:
       tags: [Tax]
       summary: Get tax rate for a specific product
       description: |
-        Returns the applicable tax rate for a product. 
+        Returns the applicable tax rate for a product.
       parameters:
         - name: productId
           in: path
@@ -1723,12 +1721,6 @@ components:
         id:
           type: string
           format: uuid
-        statistics:
-          type: array
-          items:
-            type: string
-            format: uuid
-          nullable: true
         name:
           type: string
         country:
