@@ -1596,11 +1596,9 @@ components:
         userId:
           type: string
           format: uuid
-        businesses:
-          type: array
-          items:
-            type: string
-            format: uuid
+        businessId:
+          type: string
+          format: uuid
           nullable: true
         discountId:
           type: string
@@ -1773,6 +1771,9 @@ components:
           $ref: '#/components/schemas/UserStatus'
         permissionLevel:
           type: integer
+        email:
+          type: string
+          format: email
         password:
           type: string
           format: password
@@ -1787,6 +1788,7 @@ components:
           permissionLevel,
           businessId,
           employmentStatus,
+          email,
           password,
           firstLogin,
         ]
@@ -1827,7 +1829,10 @@ components:
         salary:
           type: number
           format: decimal
-      required: [name, surname, permissionLevel, salary]
+        email:
+          type: string
+          format: email
+      required: [name, surname, permissionLevel, salary, email]
 
     UserUpdate:
       type: object
@@ -1844,6 +1849,9 @@ components:
           $ref: '#/components/schemas/UserStatus'
         permissionLevel:
           type: integer
+        email:
+          type: string
+          format: email
       description: Update user details. All fields are optional.
 
     # Reservations
@@ -2007,6 +2015,8 @@ components:
         id:
           type: string
           format: uuid
+        title:
+          type: string
         value:
           type: number
           format: decimal
@@ -2024,11 +2034,13 @@ components:
         region:
           type: string
           nullable: true
-      required: [id, value, effectiveFrom, country]
+      required: [id, title, value, effectiveFrom, country]
 
     TaxRateCreate:
       type: object
       properties:
+        title:
+          type: string
         value:
           type: number
           format: decimal
@@ -2044,7 +2056,7 @@ components:
           type: string
         region:
           type: string
-      required: [value, effectiveFrom, country]
+      required: [value, title, effectiveFrom, country]
 
     Place:
       type: object
@@ -2161,7 +2173,7 @@ components:
 
     UserStatus:
       type: string
-      enum: [active, terminate]
+      enum: [Active, Terminate]
 
     ProductStatus:
       type: string
