@@ -1510,7 +1510,7 @@ components:
         productId:
           type: string
           format: uuid
-        productVariationGroup:
+        productVariationIds:
           type: array
           items:
             type: string
@@ -1548,7 +1548,7 @@ components:
           type: array
           items:
             type: boolean
-        productVariationGroup:
+        productVariationIds:
           type: array
           items:
             type: string
@@ -1568,7 +1568,7 @@ components:
         productId:
           type: string
           format: uuid
-        productVariationGroup:
+        productVariationIds:
           type: array
           items:
             type: string
@@ -1657,7 +1657,7 @@ components:
           type: array
           items:
             type: boolean
-        productVariationGroup:
+        productVariationIds:
           type: array
           items:
             type: string
