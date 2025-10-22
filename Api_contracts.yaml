@@ -1335,6 +1335,12 @@ components:
         businessId:
           type: string
           format: uuid
+        users:
+          type: array
+          items:
+            type: string
+            format: uuid
+            nullable: true
         name:
           type: string
         price:
@@ -1387,6 +1393,12 @@ components:
         description:
           type: string
           nullable: true
+        users:
+          type: array
+          items:
+            type: string
+            format: uuid
+            nullable: true
         tax:
           type: string
           format: uuid
@@ -1952,10 +1964,12 @@ components:
         businessId:
           type: string
           format: uuid
-        productId:
-          type: string
-          format: uuid
-          nullable: true
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            nullable: true
         startDate:
           type: string
           format: date-time
@@ -1988,9 +2002,12 @@ components:
         businessId:
           type: string
           format: uuid
-        productId:
-          type: string
-          format: uuid
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            nullable: true
         startDate:
           type: string
           format: date-time
